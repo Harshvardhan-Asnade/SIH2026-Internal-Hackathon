@@ -28,9 +28,12 @@ from app.models.schemas import (
     ProcessingResult,
     ProcessRequest,
     UploadResponse,
+    QueryRequest,
+    QueryResponse,
 )
 from app.ai.base.module_registry import ModuleRegistry, get_module_registry
 from app.services.video_service import process_video, VideoProcessingError
+from app.services.llm_service import llm_service
 from app.utils.file_utils import (
     generate_video_id,
     get_output_path,
@@ -166,6 +169,19 @@ async def process_uploaded_video(
             detail=f"Inference failed: {exc}",
         )
 
+    # ── Generate AI Master Intelligence Report ────────────────────────
+    try:
+        cv_json_dump = result.model_dump(mode="json")
+        # Remove the bulky detections array so we don't overwhelm the LLM context limit
+        if "detections" in cv_json_dump:
+            del cv_json_dump["detections"]
+            
+        report = await llm_service.generate_report(cv_json_dump)
+        result.ai_master_report = report
+    except Exception as exc:
+        logger.exception("Failed to generate AI Master report")
+        result.ai_master_report = f"LLM Integration Error: {exc}"
+
     return result
 
 
@@ -249,3 +265,31 @@ async def get_heatmap(
         media_type="image/png",
         filename="crowd_heatmap.png",
     )
+
+
+# ─────────────────────────────────────────────────────────────────────
+# POST /query
+# ─────────────────────────────────────────────────────────────────────
+@router.post(
+    "/query",
+    response_model=QueryResponse,
+    summary="Ask the AI Master a natural language question",
+)
+async def ask_query(
+    body: QueryRequest,
+):
+    """
+    Query the RailVision AI Master engine with a natural language question.
+    """
+    try:
+        # In a real scenario, we'd fetch the specific video_id's JSON context
+        # from a database. For now, we just pass the query.
+        answer = await llm_service.query_assistant(body.query)
+        return QueryResponse(status="success", answer=answer, confidence="High")
+    except Exception as exc:
+        logger.exception("Natural Language Query failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Query failed: {exc}",
+        )
+

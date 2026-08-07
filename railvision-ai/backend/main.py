@@ -31,6 +31,7 @@ from app.ai.crime.config import CrimeDetectionConfig
 from app.ai.crime.module import CrimeDetectionModule
 from app.ai.worker.config import WorkerMonitoringConfig
 from app.ai.worker.module import WorkerMonitoringModule
+from app.services.llm_service import llm_service
 
 # ── Logging ──────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -97,8 +98,12 @@ async def lifespan(app: FastAPI):
     )
     registry.register(WorkerMonitoringModule(worker_cfg))
 
-    # 3. Initialize active modules
+    # 3. Initialize active modules (CV)
     registry.initialize_all()
+
+    # 4. Initialize LLM (RailVision AI Master)
+    # This might take a bit of time to download/load the 8B model into memory.
+    llm_service.initialize()
 
     yield  # ← Application is running
 

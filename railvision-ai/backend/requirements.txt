@@ -17,3 +17,9 @@ numpy>=1.26.0
 
 # Utilities
 python-dotenv>=1.0.0
+
+# LLM Support
+transformers>=4.40.0
+accelerate>=0.30.0
+tiktoken
+
