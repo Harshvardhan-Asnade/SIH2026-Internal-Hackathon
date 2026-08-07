@@ -21,8 +21,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Base Model ID - (Qwen 3 8B placeholder -> Qwen2.5-7B-Instruct)
-MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
+# Base Model ID - Use a smaller 0.5B model for the hackathon demo so it starts instantly without large downloads.
+# (You can change this back to Qwen2.5-7B-Instruct for production later)
+MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 
 class LLMService:
     def __init__(self):
@@ -48,16 +49,17 @@ class LLMService:
         try:
             # We attempt to use bfloat16 or float16 to save memory
             # If on an Apple Silicon Mac, MPS is preferred but float16 is standard.
-            dtype = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+            device = "mps" if torch.backends.mps.is_available() else "cpu"
+            dtype = torch.float16 if device == "mps" else torch.float32
             
-            # device_map="auto" places it on GPU/MPS if available
+            # Explicitly load on CPU first, then move to MPS to avoid AutoAccelerate hangs
             self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
             self.model = AutoModelForCausalLM.from_pretrained(
                 MODEL_ID,
                 torch_dtype=dtype,
-                device_map="auto",
                 low_cpu_mem_usage=True
-            )
+            ).to(device)
+            
             self.is_ready = True
             logger.info("LLM initialized successfully!")
         except Exception as e:
