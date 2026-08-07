@@ -2,7 +2,7 @@ railvision-ai/node_modules/
 railvision-ai/.next/
 railvision-ai/backend/.venv/
 railvision-ai/backend/__pycache__/
-railvision-ai/backend/weights/
+
 railvision-ai/backend/uploads/
 railvision-ai/backend/outputs/
 *.log

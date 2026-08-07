@@ -1,0 +1,4 @@
+# Keep these directories in Git but ignore their contents
+# YOLO weights will be auto-downloaded here on first run
+*
+!.gitkeep
