@@ -172,9 +172,16 @@ async def process_uploaded_video(
     # ── Generate AI Master Intelligence Report ────────────────────────
     try:
         cv_json_dump = result.model_dump(mode="json")
-        # Remove the bulky detections array so we don't overwhelm the LLM context limit
+        
+        # We MUST strip all raw bounding-box arrays, otherwise the LLM gets a 50k+ token prompt 
+        # which crashes or hangs local inference completely!
         if "detections" in cv_json_dump:
             del cv_json_dump["detections"]
+            
+        for module_name in ["person_detection", "crowd_analysis", "crime_detection", "worker_monitoring"]:
+            if module_name in cv_json_dump and isinstance(cv_json_dump[module_name], dict):
+                if "detections" in cv_json_dump[module_name]:
+                    del cv_json_dump[module_name]["detections"]
             
         report = await llm_service.generate_report(cv_json_dump)
         result.ai_master_report = report
