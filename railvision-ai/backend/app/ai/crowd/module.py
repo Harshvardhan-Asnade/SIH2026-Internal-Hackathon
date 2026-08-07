@@ -1,0 +1,311 @@
+"""
+RailVision AI — Crowd Analysis Module (Production)
+
+Full crowd-management pipeline for Indian Railways:
+
+    YOLO Person Detection → ByteTrack → Zone Counting →
+    Density Estimation → Heatmap → Risk Assessment → Alerts
+
+This module **reuses** the same YOLO model loaded by
+``PersonDetectionModule``.  It accesses the model via the
+``ModuleRegistry`` at initialization so no duplicate weights
+are loaded.
+
+Architecture
+------------
+- ``CrowdStatistics``   — Accumulates per-frame person counts.
+- ``CrowdRiskEngine``   — Density / risk level classification.
+- ``HeatmapGenerator``  — Gaussian foot-point heatmap.
+- ``ZoneCounter``       — 3×3 spatial zone counting.
+- ``CrowdAlertService`` — Contextual alert generation.
+"""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any
+
+import cv2
+import numpy as np
+from ultralytics import YOLO
+
+from app.ai.base.base_module import (
+    BaseAIModule,
+    FrameDetection,
+    ModuleResult,
+    Alert,
+)
+from app.ai.crowd.config import CrowdAnalysisConfig
+from app.ai.crowd.statistics import CrowdStatistics
+from app.ai.crowd.risk_engine import CrowdRiskEngine
+from app.ai.crowd.heatmap import HeatmapGenerator
+from app.ai.crowd.zone_counter import ZoneCounter
+from app.ai.crowd.alert_service import CrowdAlertService
+
+logger = logging.getLogger(__name__)
+
+# ── OSD drawing constants ────────────────────────────────────────────
+_FONT = cv2.FONT_HERSHEY_SIMPLEX
+_FONT_SCALE = 0.6
+_FONT_THICK = 2
+_WHITE = (255, 255, 255)
+_GREEN = (0, 255, 0)
+_YELLOW = (0, 255, 255)
+_RED = (0, 0, 255)
+_CYAN = (255, 255, 0)
+
+_RISK_COLORS = {
+    "NORMAL": _GREEN,
+    "MEDIUM": _YELLOW,
+    "HIGH": (0, 165, 255),     # orange
+    "CRITICAL": _RED,
+}
+
+
+class CrowdAnalysisModule(BaseAIModule):
+    """
+    Production crowd-management module.
+
+    Processes each frame through the full analytics pipeline and
+    annotates the video with crowd overlays (bounding boxes with
+    track IDs, crowd count, density badge, risk badge, FPS).
+    """
+
+    def __init__(self, config: CrowdAnalysisConfig) -> None:
+        super().__init__(name="crowd_analysis", enabled=config.enabled)
+        self._config = config
+
+        # Sub-services
+        self._stats = CrowdStatistics()
+        self._risk_engine = CrowdRiskEngine(config)
+        self._heatmap = HeatmapGenerator(config)
+        self._alert_service = CrowdAlertService(config)
+        self._zone_counter: ZoneCounter | None = None
+
+        # YOLO model (loaded once)
+        self._model: YOLO | None = None
+        self._class_names: dict[int, str] = {}
+
+        # Frame dimensions (set on first frame)
+        self._frame_h: int = 0
+        self._frame_w: int = 0
+        self._initialized_frame: bool = False
+
+        # Last risk evaluation (for OSD drawing)
+        self._last_risk: dict[str, Any] = {}
+        self._last_zones: dict[str, Any] = {}
+
+        # Heatmap output path (set during processing)
+        self._heatmap_path: str = ""
+        self._last_frame: np.ndarray | None = None
+
+    # ── Lifecycle ────────────────────────────────────────────────────
+    def initialize(self) -> None:
+        """Initialize the crowd analysis module."""
+        if not self._enabled:
+            return
+
+        logger.info("[crowd_analysis] Initializing without separate YOLO weights (reuses person_detection).")
+        self._loaded = True
+
+    def reset(self) -> None:
+        """Clear all accumulated state before a new video."""
+        super().reset()
+        self._stats.reset()
+        self._alert_service.reset()
+        self._initialized_frame = False
+        self._last_risk = {}
+        self._last_zones = {}
+        self._heatmap_path = ""
+        self._last_frame = None
+
+    # ── Frame-level inference ────────────────────────────────────────
+    def process_frame(
+        self, frame: np.ndarray, frame_idx: int, shared_context: dict[str, Any]
+    ) -> list[FrameDetection]:
+        """
+        Consume person detections from the shared context, then feed
+        results through the full analytics pipeline.
+        """
+        if not self._enabled or not self._loaded:
+            return []
+
+        # Optional frame-skip
+        if (
+            self._config.frame_skip > 0
+            and frame_idx % (self._config.frame_skip + 1) != 0
+        ):
+            return []
+
+        # Lazy-init frame-dependent structures
+        if not self._initialized_frame:
+            h, w = frame.shape[:2]
+            self._frame_h = h
+            self._frame_w = w
+            self._heatmap.reset(h, w)
+            self._zone_counter = ZoneCounter(h, w)
+            self._initialized_frame = True
+
+        # Keep last frame for heatmap background
+        self._last_frame = frame.copy()
+
+        # ── Consume Detections ───────────────────────────────────────
+        # Get detections generated by person_detection
+        person_dets = shared_context.get("person_detection", [])
+        
+        detections: list[FrameDetection] = []
+        bboxes: list[list[int]] = []
+        track_ids: list[int] = []
+
+        for det in person_dets:
+            if det.class_name == "person":
+                bboxes.append(det.bbox)
+                tid = det.metadata.get("track_id", -1)
+                if tid >= 0:
+                    track_ids.append(tid)
+                # Re-emit the detection (optional, but good for pipeline)
+                detections.append(det)
+
+        person_count = len(bboxes)
+
+        # ── Sub-service updates ──────────────────────────────────────
+        # Zone counting
+        if self._zone_counter and self._config.enable_zone_counting:
+            self._last_zones = self._zone_counter.count_zones(bboxes)
+
+        # Heatmap update
+        if self._config.enable_heatmap:
+            self._heatmap.update(bboxes)
+
+        # Risk evaluation
+        if self._config.enable_crowd_risk:
+            self._last_risk = self._risk_engine.evaluate(person_count)
+
+        # Statistics
+        self._stats.record_frame(
+            count=person_count,
+            zones=self._last_zones.get("vertical") if self._last_zones else None,
+            track_ids=track_ids,
+        )
+
+        # Alert evaluation
+        if self._config.enable_alerts and self._last_risk:
+            frame_alerts = self._alert_service.evaluate(
+                count=person_count,
+                density=self._last_risk.get("density", "LOW"),
+                risk=self._last_risk.get("risk", "NORMAL"),
+                risk_score=self._last_risk.get("risk_score", 0.0),
+                frame_idx=frame_idx,
+            )
+            self._results.alerts.extend(frame_alerts)
+
+        return detections
+
+    # ── Annotations ──────────────────────────────────────────────────
+    def draw_annotations(
+        self, frame: np.ndarray, detections: list[FrameDetection]
+    ) -> np.ndarray:
+        """
+        Draw crowd-specific overlays on the frame:
+        - Bounding boxes with tracking IDs
+        - Crowd count badge
+        - Density level badge
+        - Risk level badge
+        """
+        person_count = len(detections)
+
+        # ── Person bounding boxes + track IDs ────────────────────────
+        for det in detections:
+            x1, y1, x2, y2 = det.bbox
+            tid = det.metadata.get("track_id", -1)
+
+            color = _CYAN
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+
+            label = f"ID:{tid}" if tid >= 0 else "person"
+            label += f" {det.confidence:.2f}"
+
+            (tw, th), bl = cv2.getTextSize(label, _FONT, 0.5, 1)
+            cv2.rectangle(
+                frame, (x1, y1 - th - bl - 4), (x1 + tw + 4, y1), color, cv2.FILLED
+            )
+            cv2.putText(
+                frame, label, (x1 + 2, y1 - bl - 2),
+                _FONT, 0.5, (0, 0, 0), 1, cv2.LINE_AA,
+            )
+
+        # ── OSD: Crowd Count ─────────────────────────────────────────
+        density = self._last_risk.get("density", "LOW")
+        risk = self._last_risk.get("risk", "NORMAL")
+        risk_color = _RISK_COLORS.get(risk, _GREEN)
+
+        # Top-left info panel background
+        panel_h = 110
+        panel_w = 320
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (10, 10), (10 + panel_w, 10 + panel_h), (0, 0, 0), cv2.FILLED)
+        frame = cv2.addWeighted(overlay, 0.65, frame, 0.35, 0)
+
+        y_pos = 35
+        cv2.putText(
+            frame, f"People: {person_count}",
+            (20, y_pos), _FONT, _FONT_SCALE, _WHITE, _FONT_THICK, cv2.LINE_AA,
+        )
+        y_pos += 28
+        cv2.putText(
+            frame, f"Density: {density}",
+            (20, y_pos), _FONT, _FONT_SCALE, risk_color, _FONT_THICK, cv2.LINE_AA,
+        )
+        y_pos += 28
+        cv2.putText(
+            frame, f"Risk: {risk}",
+            (20, y_pos), _FONT, _FONT_SCALE, risk_color, _FONT_THICK, cv2.LINE_AA,
+        )
+        y_pos += 28
+        cv2.putText(
+            frame, f"Tracked: {self._stats.unique_people}",
+            (20, y_pos), _FONT, 0.5, _WHITE, 1, cv2.LINE_AA,
+        )
+
+        return frame
+
+    # ── Results ──────────────────────────────────────────────────────
+    def get_results(self) -> ModuleResult:
+        """
+        Build the final crowd analysis result dict.
+
+        Saves the heatmap to disk and includes its filename.
+        """
+        stats = self._stats.to_dict()
+        risk = self._risk_engine.evaluate(self._stats.maximum_count)
+
+        # Save heatmap image
+        heatmap_filename = None
+        if self._config.enable_heatmap:
+            heatmap_path = self._config.output_dir / "crowd_heatmap.png"
+            heatmap_filename = self._heatmap.save(
+                heatmap_path, background=self._last_frame
+            )
+
+        # Build summary matching the requested JSON shape
+        self._results.summary = {
+            "current_people": stats["current_people"],
+            "average_people": stats["average_people"],
+            "maximum_people": stats["maximum_people"],
+            "minimum_people": stats["minimum_people"],
+            "peak_frame": stats["peak_frame"],
+            "unique_people_tracked": stats["unique_people_tracked"],
+            "density": risk["density"],
+            "occupancy_percentage": self._stats.get_occupancy_percentage(self._config.max_platform_capacity),
+            "risk": risk["risk"],
+            "risk_score": risk["risk_score"],
+            "zones": self._last_zones.get("vertical", {}),
+            "zones_horizontal": self._last_zones.get("horizontal", {}),
+            "zones_grid": self._last_zones.get("grid", {}),
+            "heatmap": heatmap_filename or "",
+            "trend": stats.get("trend", []),
+            "statistics": stats,
+        }
+
+        return self._results
