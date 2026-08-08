@@ -83,7 +83,7 @@ Uses the `TrackedPerson` logic to assign a unique ID to every detected person, k
 ```
 
 ## Future Improvements
-- Replace colour heuristics with a custom YOLOv11 PPE Model.
+- Replace colour heuristics with a custom YOLO26 PPE Model.
 - Add facial recognition for actual staff attendance identity linking.
 - DeepSort tracking to re-identify workers who temporarily leave the frame.
 - Optical Flow integration for more accurate idle-vs-working classification (detecting hand movement even when feet are stationary).

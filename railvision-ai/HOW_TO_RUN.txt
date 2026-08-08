@@ -1,0 +1,11 @@
+
+STEP 1: 
+
+cd "railvision-ai/backend"
+source .venv/bin/activate
+uvicorn main:app --reload --port 8000
+
+STEP 2:
+
+cd "railvision-ai"
+npm run dev

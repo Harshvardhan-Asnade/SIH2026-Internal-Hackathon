@@ -70,9 +70,9 @@ export function DynamicTabs() {
   }, [r]);
 
   return (
-    <div className="flex flex-col mt-3 flex-1 min-h-0 bg-[#0a0a0a] rounded-xl border border-[rgba(255,255,255,0.04)] overflow-hidden">
+    <div className="flex flex-col mt-3 flex-1 min-h-0 bg-[#070707] rounded-xl border border-white/5 overflow-hidden">
       {/* ── Tab Navigation ────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[rgba(255,255,255,0.04)] bg-[#0c0c0c] overflow-x-auto relative">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-[#0c0c0c] overflow-x-auto relative">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -83,13 +83,13 @@ export function DynamicTabs() {
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`relative px-4 py-2 rounded-lg text-[12px] font-medium transition-colors whitespace-nowrap flex items-center gap-2 z-10 ${
-                isActive ? "text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.03)]"
+                isActive ? "text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
               }`}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-[rgba(255,255,255,0.08)] rounded-lg shadow-sm"
+                  className="absolute inset-0 bg-[rgba(255,255,255,0.05)] rounded-lg shadow-sm"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
@@ -112,11 +112,11 @@ export function DynamicTabs() {
             <div className="h-full w-full space-y-6">
               <div className="grid grid-cols-4 gap-5">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-[90px] rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] animate-pulse" />
+                  <div key={i} className="h-[90px] rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/5 animate-pulse" />
                 ))}
               </div>
-              <div className="h-[250px] rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] animate-pulse" />
-              <div className="h-[150px] rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] animate-pulse" />
+              <div className="h-[250px] rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/5 animate-pulse" />
+              <div className="h-[150px] rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/5 animate-pulse" />
             </div>
           ) : (
             <motion.div 
@@ -142,22 +142,22 @@ export function DynamicTabs() {
                 <MetricCard label="Processing Time" value={`${r.processing_time.toFixed(2)}s`} accent />
                 <MetricCard label="Detections" value={r.detections?.length || 0} />
 
-                <div className="col-span-2 bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="col-span-2 bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold">Module Summary</h4>
                   <div className="space-y-3">
                     <SummaryRow icon={Users} label="Crowd" value={`Peak: ${r.crowd_analysis?.maximum_people || 0} people`} color="#B8FF3B" />
                     <SummaryRow icon={Shield} label="Crime" value={`${r.crime_detection?.total_incidents || 0} incidents`} color="#FF7A00" />
-                    <SummaryRow icon={HardHat} label="Workers" value={`${r.work_monitoring?.statistics?.total_workers || 0} staff`} color="#33FF99" />
+                    <SummaryRow icon={HardHat} label="Workers" value={`${r.worker_monitoring?.statistics?.total_workers || 0} staff`} color="#33FF99" />
                     <SummaryRow icon={AlertTriangle} label="Alerts" value={`${r.alerts?.length || 0} total`} color="#FF4D4D" />
                   </div>
                 </div>
 
-                <div className="col-span-2 bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="col-span-2 bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold">Latest Events</h4>
                   <div className="space-y-2">
                     {(r.alerts || []).slice(0, 5).map((a, i) => (
                       <div key={i} onClick={() => a.frame && triggerJumpToFrame(a.frame)}
-                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[rgba(255,255,255,0.03)] cursor-pointer transition-colors group"
+                        className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors group"
                       >
                         <div className={`w-2 h-2 rounded-full ${a.severity === "critical" ? "bg-[#FF4D4D]" : a.severity === "high" ? "bg-[#FF7A00]" : "bg-[#FFC857]"}`} />
                         <span className="text-[12px] text-white flex-1 truncate group-hover:text-[#B8FF3B] transition-colors">{a.message}</span>
@@ -181,7 +181,7 @@ export function DynamicTabs() {
                 </div>
 
                 {/* Occupancy bar */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold">Space Occupancy</h4>
                   <div className="w-full h-3 bg-[#181818] rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-[#33FF99] via-[#FFC857] to-[#FF4D4D] rounded-full transition-all duration-700"
@@ -193,7 +193,7 @@ export function DynamicTabs() {
                 </div>
 
                 {/* Crowd Trend */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-[#B8FF3B]" /> Crowd Trend
                   </h4>
@@ -239,7 +239,7 @@ export function DynamicTabs() {
                     const Icon = cat.icon;
                     const count = cat.data?.length || 0;
                     return (
-                      <div key={i} className={`bg-[#111] border rounded-xl p-4 transition-colors ${count > 0 ? "border-[rgba(255,122,0,0.2)] bg-[rgba(255,122,0,0.02)]" : "border-[rgba(255,255,255,0.05)]"}`}>
+                      <div key={i} className={`bg-[#111] border rounded-xl p-4 transition-colors ${count > 0 ? "border-[rgba(255,122,0,0.2)] bg-[rgba(255,122,0,0.02)]" : "border-white/5"}`}>
                         <div className="flex items-center gap-2 mb-3">
                           <Icon className={`w-4 h-4 ${count > 0 ? "text-[#FF7A00]" : "text-[#555]"}`} />
                           <span className="text-[11px] text-[#A0A0A0] uppercase tracking-wider">{cat.label}</span>
@@ -251,14 +251,14 @@ export function DynamicTabs() {
                 </div>
 
                 {/* Crime event list */}
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold">Incident Log</h4>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                     {allCrimeEvents.map((e, i) => (
                       <div key={i} onClick={() => triggerJumpToFrame(e.frame)}
                         className="flex items-center gap-4 p-3 rounded-lg border border-[rgba(255,122,0,0.1)] bg-[rgba(255,122,0,0.03)] hover:bg-[rgba(255,122,0,0.08)] cursor-pointer transition-colors"
                       >
-                        <div className="w-12 h-12 rounded-lg bg-[#0a0a0a] border border-[rgba(255,255,255,0.05)] flex items-center justify-center font-mono text-[11px] text-[#A0A0A0]">F{e.frame}</div>
+                        <div className="w-12 h-12 rounded-lg bg-[#070707] border border-white/5 flex items-center justify-center font-mono text-[11px] text-[#A0A0A0]">F{e.frame}</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] text-white font-medium mb-1">{(e as CrimeEvent & { _type: string })._type}</p>
                           <p className="text-[11px] text-[#A0A0A0]">Confidence: {(e.confidence * 100).toFixed(0)}% — Risk: {e.risk}</p>
@@ -278,18 +278,18 @@ export function DynamicTabs() {
             {activeTab === "workers" && (
               <motion.div key="workers" variants={containerVariants} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }} className="space-y-6">
                 <div className="grid grid-cols-4 gap-5">
-                  <MetricCard label="Total Staff" value={r.work_monitoring?.statistics?.total_workers || 0} />
-                  <MetricCard label="Helmet %" value={`${r.work_monitoring?.statistics?.helmet_compliance || 0}%`} color="#33FF99" />
-                  <MetricCard label="Jacket %" value={`${r.work_monitoring?.statistics?.jacket_compliance || 0}%`} color="#33FF99" />
-                  <MetricCard label="Safety Score" value={`${r.work_monitoring?.statistics?.overall_safety || 0}%`} accent />
+                  <MetricCard label="Total Staff" value={r.worker_monitoring?.statistics?.total_workers || 0} />
+                  <MetricCard label="Helmet %" value={`${r.worker_monitoring?.statistics?.helmet_compliance || 0}%`} color="#33FF99" />
+                  <MetricCard label="Jacket %" value={`${r.worker_monitoring?.statistics?.jacket_compliance || 0}%`} color="#33FF99" />
+                  <MetricCard label="Safety Score" value={`${r.worker_monitoring?.statistics?.overall_safety || 0}%`} accent />
                 </div>
 
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                   <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-4 font-semibold">Worker Roster</h4>
                   <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
-                    {(r.work_monitoring?.workers || []).map((w: WorkerInfo) => (
-                      <div key={w.worker_id} className="flex items-center gap-4 p-3 rounded-lg border border-[rgba(255,255,255,0.03)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(255,255,255,0.04)] transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-[#0a0a0a] border border-[rgba(255,255,255,0.05)] flex items-center justify-center text-[11px] font-mono text-[#A0A0A0]">
+                    {(r.worker_monitoring?.workers || []).map((w: WorkerInfo) => (
+                      <div key={w.worker_id} className="flex items-center gap-4 p-3 rounded-lg border border-white/5 bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                        <div className="w-10 h-10 rounded-lg bg-[#070707] border border-white/5 flex items-center justify-center text-[11px] font-mono text-[#A0A0A0]">
                           W{w.worker_id}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -313,7 +313,7 @@ export function DynamicTabs() {
                         </div>
                       </div>
                     ))}
-                    {(!r.work_monitoring?.workers || r.work_monitoring.workers.length === 0) && (
+                    {(!r.worker_monitoring?.workers || r.worker_monitoring.workers.length === 0) && (
                       <p className="text-[13px] text-[#555] text-center py-6">No workers detected.</p>
                     )}
                   </div>
@@ -325,12 +325,12 @@ export function DynamicTabs() {
             {activeTab === "alerts" && (
               <motion.div key="alerts" variants={containerVariants} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }} className="space-y-5">
                 {/* Filter bar */}
-                <div className="flex items-center gap-3 flex-wrap bg-[#111] p-3 rounded-xl border border-[rgba(255,255,255,0.05)]">
+                <div className="flex items-center gap-3 flex-wrap bg-[#111] p-3 rounded-xl border border-white/5">
                   <Filter className="w-4 h-4 text-[#555] mx-2" />
                   {["all", "critical", "high", "medium", "low"].map(f => (
                     <button key={f} onClick={() => setAlertFilter(f)}
                       className={`px-4 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                        alertFilter === f ? "bg-[#333] text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.04)]"
+                        alertFilter === f ? "bg-[#333] text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
                       }`}
                     >{f === "all" ? "All Severities" : f.charAt(0).toUpperCase() + f.slice(1)}</button>
                   ))}
@@ -338,7 +338,7 @@ export function DynamicTabs() {
                   {["all", "crowd", "crime", "workers"].map(m => (
                     <button key={m} onClick={() => setModuleFilter(m)}
                       className={`px-4 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                        moduleFilter === m ? "bg-[#333] text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.04)]"
+                        moduleFilter === m ? "bg-[#333] text-white" : "text-[#A0A0A0] hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
                       }`}
                     >{m === "all" ? "All Modules" : m.charAt(0).toUpperCase() + m.slice(1)}</button>
                   ))}
@@ -350,7 +350,7 @@ export function DynamicTabs() {
                     const c = a.severity === "critical" ? "#FF4D4D" : a.severity === "high" ? "#FF7A00" : "#FFC857";
                     return (
                       <div key={i} onClick={() => a.frame && triggerJumpToFrame(a.frame)}
-                        className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 flex gap-4 cursor-pointer hover:border-[rgba(255,255,255,0.15)] transition-all group"
+                        className="bg-[#111] border border-white/5 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-white/5 transition-all group"
                       >
                         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${c}15` }}>
                           <AlertTriangle className="w-4 h-4" style={{ color: c }} />
@@ -380,11 +380,11 @@ export function DynamicTabs() {
             {/* ════════════════ TIMELINE ════════════════════ */}
             {activeTab === "timeline" && (
               <motion.div key="timeline" variants={containerVariants} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }} className="space-y-8">
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-6">
+                <div className="bg-[#111] border border-white/5 rounded-xl p-6">
                   <h3 className="text-[11px] font-semibold text-[#A0A0A0] uppercase tracking-wider mb-6">Event Timeline</h3>
 
                   {/* Visual timeline bar */}
-                  <div className="relative h-10 bg-[#0a0a0a] rounded-lg border border-[rgba(255,255,255,0.04)] overflow-visible">
+                  <div className="relative h-10 bg-[#070707] rounded-lg border border-white/5 overflow-visible">
                     <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 h-[2px] bg-[#181818]" />
                     {(r.alerts || []).map((a, i) => {
                       if (!a.frame) return null;
@@ -410,9 +410,9 @@ export function DynamicTabs() {
                     const c = a.severity === "critical" ? "#FF4D4D" : a.severity === "high" ? "#FF7A00" : "#FFC857";
                     return (
                       <div key={i} onClick={() => a.frame && triggerJumpToFrame(a.frame)}
-                        className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 flex items-center gap-5 cursor-pointer hover:bg-[rgba(255,255,255,0.03)] transition-colors"
+                        className="bg-[#111] border border-white/5 rounded-xl p-4 flex items-center gap-5 cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-[#0a0a0a] flex items-center justify-center font-mono text-[12px] border border-[rgba(255,255,255,0.05)] text-[#A0A0A0]">
+                        <div className="w-12 h-12 rounded-xl bg-[#070707] flex items-center justify-center font-mono text-[12px] border border-white/5 text-[#A0A0A0]">
                           F{a.frame}
                         </div>
                         <div className="flex-1">
@@ -442,7 +442,7 @@ export function DynamicTabs() {
 
                 <div className="grid grid-cols-2 gap-6">
                   {/* Detection class distribution */}
-                  <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                  <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                     <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-5 font-semibold">Detection Distribution</h4>
                     <div className="space-y-3">
                       {(() => {
@@ -463,14 +463,14 @@ export function DynamicTabs() {
                   </div>
 
                   {/* Alert severity distribution */}
-                  <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5">
+                  <div className="bg-[#111] border border-white/5 rounded-xl p-5">
                     <h4 className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-5 font-semibold">Alert Severity Breakdown</h4>
                     <div className="grid grid-cols-2 gap-4">
                       {["critical", "high", "medium", "low"].map(sev => {
                         const count = (r.alerts || []).filter(a => a.severity === sev).length;
                         const c = sev === "critical" ? "#FF4D4D" : sev === "high" ? "#FF7A00" : sev === "medium" ? "#FFC857" : "#33FF99";
                         return (
-                          <div key={sev} className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col items-center justify-center">
+                          <div key={sev} className="bg-[#070707] border border-white/5 rounded-lg p-4 flex flex-col items-center justify-center">
                             <p className="text-4xl font-display font-bold mb-1" style={{ color: c }}>{count}</p>
                             <p className="text-[10px] uppercase tracking-widest text-[#555]">{sev}</p>
                           </div>
@@ -485,23 +485,36 @@ export function DynamicTabs() {
             {/* ════════════════ REPORTS ═════════════════════ */}
             {activeTab === "reports" && (
               <motion.div key="reports" variants={containerVariants} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-8">
-                  <h4 className="text-[14px] font-semibold text-white uppercase tracking-wider mb-6 pb-4 border-b border-[rgba(255,255,255,0.04)]">AI Investigation Report</h4>
+                <div className="bg-[#111] border border-white/5 rounded-xl p-8">
+                  <h4 className="text-[14px] font-semibold text-white uppercase tracking-wider mb-6 pb-4 border-b border-white/5">AI Investigation Report</h4>
                   <div className="space-y-6 text-[13px] text-[#A0A0A0]">
                     <div className="grid grid-cols-2 gap-6">
-                      <div className="bg-[#0a0a0a] p-4 rounded-lg border border-[rgba(255,255,255,0.03)]"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Source Video</span> <span className="text-white font-medium">{r.video}</span></div>
-                      <div className="bg-[#0a0a0a] p-4 rounded-lg border border-[rgba(255,255,255,0.03)]"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Total Frames</span> <span className="text-white font-mono">{r.frames}</span></div>
-                      <div className="bg-[#0a0a0a] p-4 rounded-lg border border-[rgba(255,255,255,0.03)]"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Processing FPS</span> <span className="text-white font-mono">{r.fps}</span></div>
-                      <div className="bg-[#0a0a0a] p-4 rounded-lg border border-[rgba(255,255,255,0.03)]"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Total Time</span> <span className="text-[#B8FF3B] font-mono font-bold">{r.processing_time.toFixed(2)}s</span></div>
+                      <div className="bg-[#070707] p-4 rounded-lg border border-white/5"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Source Video</span> <span className="text-white font-medium">{r.video}</span></div>
+                      <div className="bg-[#070707] p-4 rounded-lg border border-white/5"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Total Frames</span> <span className="text-white font-mono">{r.frames}</span></div>
+                      <div className="bg-[#070707] p-4 rounded-lg border border-white/5"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Processing FPS</span> <span className="text-white font-mono">{r.fps}</span></div>
+                      <div className="bg-[#070707] p-4 rounded-lg border border-white/5"><span className="text-[#555] uppercase tracking-wider text-[10px] block mb-1">Total Time</span> <span className="text-[#B8FF3B] font-mono font-bold">{r.processing_time.toFixed(2)}s</span></div>
                     </div>
                     <div className="pt-2 space-y-4">
                       <div className="flex gap-4 items-center"><Users className="w-5 h-5 text-[#B8FF3B]" /> <p><strong className="text-white">Crowd Analytics:</strong> Peak of {r.crowd_analysis?.maximum_people || 0} people, Density Level: {r.crowd_analysis?.density || "N/A"}</p></div>
                       <div className="flex gap-4 items-center"><Shield className="w-5 h-5 text-[#FF7A00]" /> <p><strong className="text-white">Crime Detection:</strong> {r.crime_detection?.total_incidents || 0} total incidents detected ({r.crime_detection?.critical_incidents || 0} critical severity)</p></div>
-                      <div className="flex gap-4 items-center"><HardHat className="w-5 h-5 text-[#33FF99]" /> <p><strong className="text-white">Worker Monitoring:</strong> {r.work_monitoring?.statistics?.total_workers || 0} staff identified, Overall Safety Score: {r.work_monitoring?.statistics?.overall_safety || 0}%</p></div>
+                      <div className="flex gap-4 items-center"><HardHat className="w-5 h-5 text-[#33FF99]" /> <p><strong className="text-white">Worker Monitoring:</strong> {r.worker_monitoring?.statistics?.total_workers || 0} staff identified, Overall Safety Score: {r.worker_monitoring?.statistics?.overall_safety || 0}%</p></div>
                       <div className="flex gap-4 items-center"><AlertTriangle className="w-5 h-5 text-[#FF4D4D]" /> <p><strong className="text-white">Alert Generation:</strong> {r.alerts?.length || 0} total actionable alerts</p></div>
                     </div>
                   </div>
                 </div>
+
+                {/* ── AI Master Intelligence Report ──────────── */}
+                {r.ai_master_report && (
+                  <div className="bg-[#111] border border-[rgba(184,255,59,0.15)] rounded-xl p-8">
+                    <h4 className="text-[14px] font-semibold text-[#B8FF3B] uppercase tracking-wider mb-6 pb-4 border-b border-[rgba(184,255,59,0.1)] flex items-center gap-3">
+                      <Activity className="w-5 h-5" />
+                      AI Master Intelligence Report
+                    </h4>
+                    <div className="text-[13px] text-[#ccc] leading-relaxed whitespace-pre-wrap font-mono bg-[#070707] p-6 rounded-lg border border-white/5 max-h-[400px] overflow-y-auto">
+                      {r.ai_master_report}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -529,7 +542,7 @@ export function DynamicTabs() {
 
 const MetricCard = memo(function MetricCard({ label, value, accent, color }: { label: string; value: string | number; accent?: boolean; color?: string }) {
   return (
-    <motion.div variants={itemVariants} className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-5 flex flex-col justify-center transition-colors hover:bg-[rgba(255,255,255,0.02)]">
+    <motion.div variants={itemVariants} className="bg-[#111] border border-white/5 rounded-xl p-5 flex flex-col justify-center transition-colors hover:bg-[rgba(255,255,255,0.05)]">
       <p className="text-[11px] text-[#A0A0A0] uppercase tracking-wider mb-2 font-medium">{label}</p>
       <p className={`text-4xl font-display font-bold ${accent ? "text-[#B8FF3B]" : color ? "" : "text-white"}`}
         style={color ? { color } : undefined}
@@ -540,8 +553,8 @@ const MetricCard = memo(function MetricCard({ label, value, accent, color }: { l
 
 const SummaryRow = memo(function SummaryRow({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string; color: string }) {
   return (
-    <motion.div variants={itemVariants} className="flex items-center gap-3 py-2 border-b border-[rgba(255,255,255,0.02)] last:border-0">
-      <div className="w-7 h-7 rounded bg-[rgba(255,255,255,0.03)] flex items-center justify-center shrink-0">
+    <motion.div variants={itemVariants} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+      <div className="w-7 h-7 rounded bg-[rgba(255,255,255,0.05)] flex items-center justify-center shrink-0">
         <Icon className="w-3.5 h-3.5" style={{ color }} />
       </div>
       <span className="text-[12px] text-[#A0A0A0] w-20 font-medium">{label}</span>
@@ -553,7 +566,7 @@ const SummaryRow = memo(function SummaryRow({ icon: Icon, label, value, color }:
 function ExportButton({ label, desc, icon: Icon, onClick }: { label: string; desc: string; icon: React.ElementType; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className="glass-card p-6 flex flex-col items-center justify-center gap-3 hover:bg-[rgba(255,255,255,0.02)] hover:border-[rgba(184,255,59,0.2)] transition-all group cursor-pointer"
+      className="glass-card p-6 flex flex-col items-center justify-center gap-3 hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(184,255,59,0.2)] transition-all group cursor-pointer"
     >
       <Icon className="w-6 h-6 text-[#555] group-hover:text-[#B8FF3B] transition-colors" />
       <div className="text-center">

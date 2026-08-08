@@ -11,6 +11,7 @@ import type {
   ProcessingResult,
   ProcessRequest,
   HealthResponse,
+  QueryResponse,
 } from "@/lib/api-types";
 
 // ── Axios instance ──────────────────────────────────────────────────
@@ -59,6 +60,18 @@ export async function processVideo(
 // ── Get result video URL ────────────────────────────────────────────
 export function getResultVideoUrl(videoId: string): string {
   return `${API_BASE_URL}/result/${videoId}`;
+}
+
+// ── Query the AI Assistant ──────────────────────────────────────────
+export async function queryAssistant(
+  query: string,
+  context?: Record<string, unknown>
+): Promise<QueryResponse> {
+  const { data } = await api.post<QueryResponse>("/query", {
+    query,
+    context,
+  });
+  return data;
 }
 
 export default api;

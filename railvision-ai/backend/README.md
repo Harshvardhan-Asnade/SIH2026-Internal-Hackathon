@@ -63,7 +63,7 @@ uvicorn main:app --reload
 The server starts at **http://localhost:8000**.
 Interactive API docs at **http://localhost:8000/docs**.
 
-> **First run:** YOLO weights (`yolo11n.pt`) are auto-downloaded into `weights/`.
+> **First run:** YOLO weights (`yolo26n.pt`) are auto-downloaded into `weights/`.
 
 ---
 
@@ -122,7 +122,7 @@ All settings can be overridden via environment variables or a `.env` file:
 
 | Variable              | Default       | Description                        |
 | --------------------- | ------------- | ---------------------------------- |
-| `MODEL_NAME`          | `yolo11n.pt`  | YOLO weights filename              |
+| `MODEL_NAME`          | `yolo26n.pt`  | YOLO weights filename              |
 | `MODEL_CONFIDENCE`    | `0.40`        | Min detection confidence           |
 | `MODEL_IOU_THRESHOLD` | `0.45`        | NMS IoU threshold                  |
 | `MODEL_DEVICE`        | `cpu`         | `cpu`, `cuda`, or `mps`            |
@@ -144,7 +144,7 @@ All settings can be overridden via environment variables or a `.env` file:
 ## Tech Stack
 
 - **FastAPI** — async HTTP framework
-- **Ultralytics YOLO** — object detection (YOLOv11)
+- **Ultralytics YOLO** — object detection (YOLO26)
 - **PyTorch** — deep learning runtime
 - **OpenCV** — video I/O and frame manipulation
 - **Pydantic v2** — data validation & serialisation

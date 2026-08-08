@@ -135,7 +135,7 @@ class ModuleRegistry:
             cap.release()
             raise RuntimeError(f"Corrupted or empty video: {input_path.name}")
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*"avc1")
         writer = cv2.VideoWriter(str(output_path), fourcc, src_fps, (w, h))
         if not writer.isOpened():
             cap.release()

@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import type { ProcessingResult, Alert, CrimeEvent } from '@/lib/api-types';
 import { DEMO_MOCK_RESULT } from '@/lib/mock-data';
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    RailVision AI — Global Workspace Store
    Every component subscribes to this. No prop drilling.
@@ -56,6 +63,10 @@ interface WorkspaceState {
   alertFilter: string; // 'all' | 'critical' | 'high' | 'medium' | 'low'
   moduleFilter: string; // 'all' | 'crowd' | 'crime' | 'workers'
 
+  // ── AI Chat ────────────────────────────────────────
+  chatMessages: ChatMessage[];
+  isChatLoading: boolean;
+
   // ── Actions ───────────────────────────────────────
   setActiveFile: (file: File | null, previewUrl: string | null) => void;
   setResultVideoUrl: (url: string | null) => void;
@@ -74,6 +85,9 @@ interface WorkspaceState {
   setModuleFilter: (filter: string) => void;
   updateVideoState: (partial: Partial<VideoState>) => void;
   toggleOverlay: (key: keyof OverlayToggles) => void;
+  addChatMessage: (msg: ChatMessage) => void;
+  setChatLoading: (v: boolean) => void;
+  clearChat: () => void;
   resetWorkspace: () => void;
   
   // ── Demo Mode ─────────────────────────────────────
@@ -124,6 +138,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   alertFilter: 'all',
   moduleFilter: 'all',
 
+  chatMessages: [],
+  isChatLoading: false,
+
   setActiveFile: (file, previewUrl) => set({
     activeFile: file,
     activePreviewUrl: previewUrl,
@@ -152,6 +169,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setModuleFilter: (filter) => set({ moduleFilter: filter }),
   updateVideoState: (partial) => set({ videoState: { ...get().videoState, ...partial } }),
   toggleOverlay: (key) => set({ overlays: { ...get().overlays, [key]: !get().overlays[key] } }),
+  addChatMessage: (msg) => set({ chatMessages: [...get().chatMessages, msg] }),
+  setChatLoading: (v) => set({ isChatLoading: v }),
+  clearChat: () => set({ chatMessages: [] }),
 
   resetWorkspace: () => set({
     activeFile: null,
@@ -172,6 +192,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     selectedCrimeEvent: null,
     alertFilter: 'all',
     moduleFilter: 'all',
+    chatMessages: [],
+    isChatLoading: false,
   }),
 
   isDemoMode: false,

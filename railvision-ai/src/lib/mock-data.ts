@@ -42,7 +42,7 @@ export const DEMO_MOCK_RESULT: ProcessingResult = {
     crowd_panic: [],
     fight_detection: []
   },
-  work_monitoring: {
+  worker_monitoring: {
     statistics: {
       total_workers: 12,
       helmet_compliance: 83.3,

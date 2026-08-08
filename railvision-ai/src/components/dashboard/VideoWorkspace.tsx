@@ -264,11 +264,11 @@ export function VideoWorkspace() {
 
         {/* ── Smart Timeline with detection markers ───────── */}
         {processingResult && (
-          <div className="h-6 bg-[#0c0c0c] border-t border-[rgba(255,255,255,0.04)] relative px-4 flex-shrink-0">
+          <div className="h-6 bg-[#0c0c0c] border-t border-white/5 relative px-4 flex-shrink-0 group/timeline">
             <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-[3px] bg-[#181818] rounded-full" />
             {/* Playhead */}
             <div
-              className="absolute top-0 bottom-0 w-[2px] bg-white z-20"
+              className="absolute top-0 bottom-0 w-[2px] bg-white z-20 pointer-events-none"
               style={{ left: `${4 + (videoState.duration ? (videoState.currentTime / videoState.duration) * (100 - 3.2) : 0)}%` }}
             />
             {/* Detection markers */}
@@ -276,42 +276,43 @@ export function VideoWorkspace() {
               if (!alert.frame) return null;
               const pos = (alert.frame / processingResult.frames) * 100;
               const c = alert.severity === "critical" ? "#FF4D4D" : alert.severity === "high" ? "#FF7A00" : "#B8FF3B";
+              const timeStr = new Date((alert.frame / fps) * 1000).toISOString().substr(14, 5);
               return (
                 <div
                   key={i}
                   onClick={() => useWorkspaceStore.getState().triggerJumpToFrame(alert.frame!)}
-                  className="absolute top-1/2 -translate-y-1/2 w-1.5 h-3 rounded-full cursor-pointer hover:scale-[2] transition-transform z-10"
+                  className="absolute top-1/2 -translate-y-1/2 w-1.5 h-3 rounded-full cursor-pointer hover:scale-[2.5] transition-transform z-10 group"
                   style={{ left: `${pos}%`, backgroundColor: c }}
-                  title={`${alert.module} — ${alert.severity} — F${alert.frame}`}
-                />
+                >
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-[rgba(255,255,255,0.15)] px-2 py-1 rounded text-[10px] whitespace-nowrap pointer-events-none z-50 flex flex-col items-center">
+                    <span className="font-bold" style={{ color: c }}>{alert.severity.toUpperCase()}</span>
+                    <span className="text-white text-[9px]">{alert.module}</span>
+                    <span className="text-[#A0A0A0] font-mono text-[9px]">{timeStr} • F{alert.frame}</span>
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
 
         {/* ── Controls bar ────────────────────────────────── */}
-        <div className="h-12 border-t border-[rgba(255,255,255,0.04)] bg-[#0a0a0a] px-4 flex items-center gap-3 flex-shrink-0">
-          {/* Frame step back */}
-          <button onClick={() => stepFrame(-1)} disabled={!videoSrc} className="ctrl-btn"><ChevronLeft className="w-4 h-4" /></button>
+        <div className="h-12 border-t border-white/5 bg-[#070707] px-4 flex items-center gap-3 flex-shrink-0 relative">
           {/* Play/Pause */}
           <button onClick={togglePlay} disabled={!videoSrc || isProcessing}
             className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:bg-[#B8FF3B] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {videoState.isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
-          {/* Frame step forward */}
-          <button onClick={() => stepFrame(1)} disabled={!videoSrc} className="ctrl-btn"><ChevronRight className="w-4 h-4" /></button>
+          
+          {/* Frame step back/forward (Seek) */}
+          <button onClick={() => stepFrame(-1)} disabled={!videoSrc} className="ctrl-btn" title="Seek Backward"><ChevronLeft className="w-4 h-4" /></button>
+          <button onClick={() => stepFrame(1)} disabled={!videoSrc} className="ctrl-btn" title="Seek Forward"><ChevronRight className="w-4 h-4" /></button>
 
           {/* Timecode */}
-          <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#A0A0A0] min-w-[120px]">
+          <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#A0A0A0] min-w-[100px]">
             <span>{formatTime(videoState.currentTime)}</span>
             <span className="text-[#333]">/</span>
             <span>{formatTime(videoState.duration)}</span>
-          </div>
-
-          {/* Frame counter */}
-          <div className="text-[10px] font-mono text-[#555] bg-[#111] px-2 py-1 rounded border border-[rgba(255,255,255,0.04)]">
-            F{videoState.currentFrame}
           </div>
 
           <div className="flex-1" />
@@ -322,40 +323,15 @@ export function VideoWorkspace() {
               {videoState.playbackRate}x
             </button>
             {showSpeedMenu && (
-              <div className="absolute bottom-full mb-2 right-0 bg-[#111] border border-[rgba(255,255,255,0.06)] rounded-xl overflow-hidden shadow-xl z-50">
+              <div className="absolute bottom-full mb-2 right-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden shadow-xl z-50">
                 {[0.25, 0.5, 1, 1.5, 2].map(r => (
                   <button key={r} onClick={() => setPlaybackRate(r)}
-                    className={`block w-full px-4 py-2 text-[11px] text-left hover:bg-[rgba(255,255,255,0.04)] ${videoState.playbackRate === r ? "text-[#B8FF3B]" : "text-[#A0A0A0]"}`}
+                    className={`block w-full px-4 py-2 text-[11px] text-left hover:bg-[rgba(255,255,255,0.05)] ${videoState.playbackRate === r ? "text-[#B8FF3B]" : "text-[#A0A0A0]"}`}
                   >{r}x</button>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Volume */}
-          <button onClick={toggleMute} className="ctrl-btn">
-            {videoState.isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-
-          {/* Screenshot */}
-          <button onClick={takeScreenshot} disabled={!videoSrc} className="ctrl-btn" title="Screenshot (S)">
-            <Camera className="w-4 h-4" />
-          </button>
-
-          {/* Overlay toggle */}
-          <button onClick={() => setShowOverlayPanel(!showOverlayPanel)} className="ctrl-btn" title="AI Overlays">
-            <Layers className="w-4 h-4" />
-          </button>
-
-          {/* PiP */}
-          <button onClick={togglePiP} disabled={!videoSrc} className="ctrl-btn" title="Picture-in-Picture">
-            <PictureInPicture2 className="w-4 h-4" />
-          </button>
-
-          {/* Fullscreen */}
-          <button onClick={toggleFullscreen} className="ctrl-btn" title="Fullscreen (F)">
-            <Maximize className="w-4 h-4" />
-          </button>
 
           {/* Download */}
           {resultVideoUrl && (
@@ -363,17 +339,41 @@ export function VideoWorkspace() {
               <Download className="w-4 h-4" />
             </a>
           )}
+
+          {/* Fullscreen */}
+          <button onClick={toggleFullscreen} className="ctrl-btn" title="Fullscreen (F)">
+            <Maximize className="w-4 h-4" />
+          </button>
+
+          {/* Advanced Menu Toggle */}
+          <button onClick={() => setShowOverlayPanel(!showOverlayPanel)} className="ctrl-btn" title="Advanced Actions">
+            <Settings2 className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* ── Overlay toggle panel ────────────────────────── */}
+        {/* ── Advanced Actions Menu (Overlays & Tools) ──────────────────────── */}
         {showOverlayPanel && (
-          <div className="absolute bottom-14 right-4 bg-[#111] border border-[rgba(255,255,255,0.06)] rounded-xl p-4 shadow-2xl z-50 w-56">
-            <h4 className="text-[11px] font-medium text-white uppercase tracking-wider mb-3">AI Overlays</h4>
+          <div className="absolute bottom-14 right-4 bg-[#111] border border-white/5 rounded-xl p-4 shadow-2xl z-50 w-56">
+            <h4 className="text-[11px] font-medium text-white uppercase tracking-wider mb-3 pb-2 border-b border-white/5">Advanced Tools</h4>
+            
+            <div className="space-y-1 mb-3">
+              <button onClick={takeScreenshot} disabled={!videoSrc} className="flex items-center gap-3 w-full py-1.5 text-[11px] hover:bg-[rgba(255,255,255,0.05)] px-2 rounded transition-colors text-[#A0A0A0]">
+                <Camera className="w-3.5 h-3.5" /> Capture Screenshot
+              </button>
+              <button onClick={togglePiP} disabled={!videoSrc} className="flex items-center gap-3 w-full py-1.5 text-[11px] hover:bg-[rgba(255,255,255,0.05)] px-2 rounded transition-colors text-[#A0A0A0]">
+                <PictureInPicture2 className="w-3.5 h-3.5" /> Picture-in-Picture
+              </button>
+              <button onClick={toggleMute} className="flex items-center gap-3 w-full py-1.5 text-[11px] hover:bg-[rgba(255,255,255,0.05)] px-2 rounded transition-colors text-[#A0A0A0]">
+                {videoState.isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />} {videoState.isMuted ? "Unmute" : "Mute"} Audio
+              </button>
+            </div>
+
+            <h4 className="text-[11px] font-medium text-white uppercase tracking-wider mb-2 pt-2 border-t border-white/5">AI Overlays</h4>
             {(Object.keys(overlays) as Array<keyof typeof overlays>).map(key => (
               <button key={key} onClick={() => toggleOverlay(key)}
-                className="flex items-center justify-between w-full py-2 text-[11px] hover:bg-[rgba(255,255,255,0.02)] px-2 rounded transition-colors"
+                className="flex items-center justify-between w-full py-1.5 text-[11px] hover:bg-[rgba(255,255,255,0.05)] px-2 rounded transition-colors"
               >
-                <span className="text-[#A0A0A0] capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</span>
+                <span className="text-[#A0A0A0] capitalize flex items-center gap-2"><Layers className="w-3.5 h-3.5 opacity-50" /> {key.replace(/([A-Z])/g, " $1").trim()}</span>
                 {overlays[key] ? <Eye className="w-3.5 h-3.5 text-[#B8FF3B]" /> : <EyeOff className="w-3.5 h-3.5 text-[#555]" />}
               </button>
             ))}

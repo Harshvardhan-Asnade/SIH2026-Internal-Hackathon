@@ -79,7 +79,7 @@ export default function RailwayCanvas() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -92,8 +92,8 @@ export default function RailwayCanvas() {
 
         // Trail
         const grad = ctx.createRadialGradient(tx, ty, 0, tx, ty, 20);
-        grad.addColorStop(0, "rgba(184, 255, 59, 0.15)");
-        grad.addColorStop(1, "rgba(184, 255, 59, 0)");
+        grad.addColorStop(0, "rgba(184,255,59,0.15)");
+        grad.addColorStop(1, "rgba(184,255,59,0)");
         ctx.beginPath();
         ctx.arc(tx, ty, 20, 0, Math.PI * 2);
         ctx.fillStyle = grad;
@@ -102,7 +102,7 @@ export default function RailwayCanvas() {
         // Dot
         ctx.beginPath();
         ctx.arc(tx, ty, 2, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(184, 255, 59, 0.6)";
+        ctx.fillStyle = "rgba(184,255,59,0.6)";
         ctx.fill();
       }
 
@@ -113,8 +113,8 @@ export default function RailwayCanvas() {
 
         // Outer glow
         const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, 12);
-        glow.addColorStop(0, "rgba(255, 255, 255, 0.06)");
-        glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+        glow.addColorStop(0, "rgba(255,255,255,0.05)");
+        glow.addColorStop(1, "rgba(255,255,255,0)");
         ctx.beginPath();
         ctx.arc(sx, sy, 12, 0, Math.PI * 2);
         ctx.fillStyle = glow;
@@ -123,7 +123,7 @@ export default function RailwayCanvas() {
         // Station dot
         ctx.beginPath();
         ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
         ctx.fill();
       }
 

@@ -99,7 +99,7 @@ export default function LandingPage() {
       <div className="noise" />
 
       {/* ── Nav ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[rgba(255,255,255,0.04)]" style={{ background: "rgba(7,7,7,0.8)", backdropFilter: "blur(12px)" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[rgba(255,255,255,0.05)]" style={{ background: "rgba(7,7,7,0.8)", backdropFilter: "blur(12px)" }}>
         <div className="container-narrow h-14 flex items-center justify-between">
           <Link href="/" className="font-display font-bold text-[15px] tracking-tight">
             RailVision<span className="text-[#B8FF3B]">.</span>
@@ -231,14 +231,14 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           3. THE TRANSFORMATION
       ═══════════════════════════════════════════════════════ */}
-      <section className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
             {/* Before */}
             <Reveal>
               <div>
                 <p className="text-[12px] text-[#555] uppercase tracking-[0.15em] mb-4">Before</p>
-                <div className="aspect-square max-w-[320px] rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden">
+                <div className="aspect-square max-w-[320px] rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#070707] flex items-center justify-center relative overflow-hidden">
                   <div className="w-16 h-16 rounded-full border border-[#222] flex items-center justify-center">
                     <div className="w-6 h-6 rounded-full bg-[#181818]" />
                   </div>
@@ -251,7 +251,7 @@ export default function LandingPage() {
             <Reveal delay={0.2}>
               <div>
                 <p className="text-[12px] text-[#B8FF3B] uppercase tracking-[0.15em] mb-4">After</p>
-                <div className="aspect-square max-w-[320px] rounded-xl border border-[rgba(184,255,59,0.08)] bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden">
+                <div className="aspect-square max-w-[320px] rounded-xl border border-[rgba(184,255,59,0.08)] bg-[#070707] flex items-center justify-center relative overflow-hidden">
                   {/* Pulsing ring */}
                   <div className="absolute w-32 h-32 rounded-full border border-[rgba(184,255,59,0.08)] animate-pulse" />
                   <div className="absolute w-24 h-24 rounded-full border border-[rgba(184,255,59,0.05)]" />
@@ -269,7 +269,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           4. PRODUCT PREVIEW
       ═══════════════════════════════════════════════════════ */}
-      <section id="platform" className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section id="platform" className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow">
           <Reveal>
             <p className="text-[13px] text-[#B8FF3B] font-medium uppercase tracking-[0.15em] mb-6">
@@ -287,9 +287,9 @@ export default function LandingPage() {
           {/* MacBook frame */}
           <Reveal delay={0.2}>
             <div className="animate-float">
-              <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#0c0c0c] overflow-hidden shadow-2xl shadow-black/50">
+              <div className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#0c0c0c] overflow-hidden shadow-2xl shadow-black/50">
                 {/* Chrome bar */}
-                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[rgba(255,255,255,0.04)] bg-[#0a0a0a]">
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[rgba(255,255,255,0.05)] bg-[#070707]">
                   <div className="flex gap-1.5">
                     <div className="w-[10px] h-[10px] rounded-full bg-[#ff5f57]/70" />
                     <div className="w-[10px] h-[10px] rounded-full bg-[#febc2e]/70" />
@@ -331,7 +331,7 @@ export default function LandingPage() {
                   {/* Camera grid */}
                   <div className="grid grid-cols-3 gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="aspect-video rounded-xl bg-[#0e0e0e] border border-[rgba(255,255,255,0.03)] relative">
+                      <div key={i} className="aspect-video rounded-xl bg-[#0e0e0e] border border-[rgba(255,255,255,0.05)] relative">
                         <div className="absolute top-1.5 left-2 flex items-center gap-1">
                           <div className="w-1 h-1 rounded-full bg-[#FF4D4D] animate-pulse-dot" />
                           <span className="text-[7px] text-[#333] font-mono">CAM-{String(i + 1).padStart(3, "0")}</span>
@@ -349,7 +349,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           5. CAPABILITIES
       ═══════════════════════════════════════════════════════ */}
-      <section id="capabilities" className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section id="capabilities" className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow">
           <Reveal>
             <p className="text-[13px] text-[#B8FF3B] font-medium uppercase tracking-[0.15em] mb-6">
@@ -367,7 +367,7 @@ export default function LandingPage() {
           <div className="space-y-0">
             {capabilities.map((cap, i) => (
               <Reveal key={cap.title} delay={i * 0.1}>
-                <div className="border-t border-[rgba(255,255,255,0.04)] py-14 grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8 items-start group">
+                <div className="border-t border-[rgba(255,255,255,0.05)] py-14 grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8 items-start group">
                   <div>
                     <p className="text-[11px] text-[#444] uppercase tracking-[0.15em] mb-3">0{i + 1}</p>
                     <h3 className="font-display text-2xl font-semibold tracking-tight group-hover:text-[#B8FF3B] transition-colors duration-300">
@@ -392,7 +392,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           6. ARCHITECTURE
       ═══════════════════════════════════════════════════════ */}
-      <section id="architecture" className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section id="architecture" className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow max-w-[700px]">
           <Reveal>
             <p className="text-[13px] text-[#B8FF3B] font-medium uppercase tracking-[0.15em] mb-6">
@@ -434,7 +434,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           7. PERFORMANCE
       ═══════════════════════════════════════════════════════ */}
-      <section className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
             {perf.map((p, i) => (
@@ -459,7 +459,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           8. CTA
       ═══════════════════════════════════════════════════════ */}
-      <section className="section-gap border-t border-[rgba(255,255,255,0.04)]">
+      <section className="section-gap border-t border-[rgba(255,255,255,0.05)]">
         <div className="container-narrow text-center">
           <Reveal>
             <h2 className="font-display text-section mb-6">
@@ -488,7 +488,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           9. FOOTER
       ═══════════════════════════════════════════════════════ */}
-      <footer className="border-t border-[rgba(255,255,255,0.04)] py-12">
+      <footer className="border-t border-[rgba(255,255,255,0.05)] py-12">
         <div className="container-narrow">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
@@ -506,7 +506,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-[rgba(255,255,255,0.03)] flex items-center justify-between">
+          <div className="mt-8 pt-6 border-t border-[rgba(255,255,255,0.05)] flex items-center justify-between">
             <p className="text-[10px] text-[#222]">© {new Date().getFullYear()} RailVision AI</p>
             <p className="text-[10px] text-[#222]">Built for Indian Railways</p>
           </div>

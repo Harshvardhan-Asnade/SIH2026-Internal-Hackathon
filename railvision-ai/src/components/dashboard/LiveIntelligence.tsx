@@ -12,7 +12,7 @@ export function LiveIntelligence() {
   const criticalAlerts  = result?.alerts?.filter(a => a.severity === "critical").length || 0;
   const crowdDensity    = result?.crowd_analysis?.maximum_people || 0;
   const crimeIncidents  = result?.crime_detection?.total_incidents || 0;
-  const activeWorkers   = result?.work_monitoring?.statistics?.total_workers || 0;
+  const activeWorkers   = result?.worker_monitoring?.statistics?.total_workers || 0;
   const processingTime  = result?.processing_time?.toFixed(2) || "—";
 
   let riskScore = 10;
@@ -50,7 +50,7 @@ export function LiveIntelligence() {
       </div>
 
       {/* ── Risk Score ─────────────────────────────── */}
-      <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 flex-shrink-0">
+      <div className="bg-[#111] border border-white/5 rounded-xl p-4 flex-shrink-0">
         <div className="flex items-baseline justify-between mb-3">
           <span className="text-[10px] text-[#666] uppercase tracking-wider">System Risk</span>
           <span className="text-[9px] text-[#555] font-mono">/ 100</span>
@@ -108,7 +108,7 @@ export function LiveIntelligence() {
       </div>
 
       {/* ── Footer ─────────────────────────────────── */}
-      <div className="mt-auto bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-3 grid grid-cols-2 gap-2">
+      <div className="mt-auto bg-[#111] border border-white/5 rounded-xl p-3 grid grid-cols-2 gap-2">
         <div>
           <p className="text-[9px] text-[#555] uppercase tracking-wider mb-1">AI Confidence</p>
           <p className="text-[15px] font-mono font-bold text-white">96.4<span className="text-[10px] text-[#555]">%</span></p>
@@ -131,7 +131,7 @@ function StatCard({
   value: string; sub?: string; valueColor?: string;
 }) {
   return (
-    <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl p-3 flex flex-col">
+    <div className="bg-[#111] border border-white/5 rounded-xl p-3 flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-4 h-4" style={{ color: iconColor }} />
         <span className="text-[8px] text-[#444] uppercase tracking-wider">{label}</span>

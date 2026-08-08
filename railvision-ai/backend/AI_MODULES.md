@@ -17,7 +17,7 @@ backend/app/
 │   ├── alerts/
 │   │   ├── engine.py            # Centralized AlertEngine aggregator
 │   │   └── models.py            # Alert schemas & severity enums
-│   ├── person/                  # [WORKING] Person Detection (YOLOv11)
+│   ├── person/                  # [WORKING] Person Detection (YOLO26)
 │   │   ├── config.py
 │   │   └── module.py
 │   ├── crowd/                   # [PLACEHOLDER] Crowd Analysis

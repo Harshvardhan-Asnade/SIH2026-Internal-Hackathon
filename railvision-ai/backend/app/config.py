@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     weights_dir: Path = _BASE_DIR / "weights"
 
     # ── Model configuration (General / Person Detection) ──
-    model_name: str = "yolo11n.pt"  # YOLO11 nano — fast, production-ready
+    model_name: str = "yolo26n.pt"  # YOLO26 nano — fast, production-ready
     model_confidence: float = 0.40
     model_iou_threshold: float = 0.45
     model_device: str = "cpu"  # "cuda", "mps", or "cpu"

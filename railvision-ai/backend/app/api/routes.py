@@ -287,11 +287,11 @@ async def ask_query(
 ):
     """
     Query the RailVision AI Master engine with a natural language question.
+    Optionally accepts a context JSON payload (e.g., detection results).
     """
     try:
-        # In a real scenario, we'd fetch the specific video_id's JSON context
-        # from a database. For now, we just pass the query.
-        answer = await llm_service.query_assistant(body.query)
+        context = body.context if hasattr(body, 'context') and body.context else None
+        answer = await llm_service.query_assistant(body.query, context)
         return QueryResponse(status="success", answer=answer, confidence="High")
     except Exception as exc:
         logger.exception("Natural Language Query failed")

@@ -1,0 +1,369 @@
+"use client";
+
+import { useWorkspaceStore, type ChatMessage } from "@/lib/store";
+import { queryAssistant } from "@/lib/api-service";
+import {
+  Brain, Send, Loader2, AlertCircle, Zap, RefreshCw,
+  Shield, Users, HardHat, AlertTriangle, MessageSquare,
+  ChevronDown, ChevronUp,
+} from "lucide-react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+/* ═══════════════════════════════════════════════════════════════════
+   Quick-prompt suggestions shown when chat is empty
+   ═══════════════════════════════════════════════════════════════════ */
+const QUICK_PROMPTS = [
+  "What happened in this video?",
+  "Summarize all incidents",
+  "Show critical alerts",
+  "Analyze crowd patterns",
+  "Any safety violations?",
+  "Generate a brief report",
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   AI Assistant Panel
+   ═══════════════════════════════════════════════════════════════════ */
+export function AIAssistant() {
+  const {
+    processingResult: r,
+    chatMessages,
+    isChatLoading,
+    addChatMessage,
+    setChatLoading,
+    clearChat,
+    isProcessing,
+  } = useWorkspaceStore();
+
+  const [input, setInput] = useState("");
+  const [reportExpanded, setReportExpanded] = useState(true);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  // Build a lightweight context object (no raw bbox arrays)
+  const buildContext = useCallback(() => {
+    if (!r) return undefined;
+    const ctx: Record<string, unknown> = {
+      frames: r.frames,
+      fps: r.fps,
+      processing_time: r.processing_time,
+    };
+    if (r.crowd_analysis) ctx.crowd_analysis = r.crowd_analysis;
+    if (r.crime_detection) {
+      // Strip large arrays, keep summary counts
+      const { track_intrusion, restricted_area, abandoned_baggage, loitering,
+        running_detection, crowd_panic, fight_detection, ...summary } = r.crime_detection;
+      ctx.crime_detection = {
+        ...summary,
+        track_intrusion_count: track_intrusion?.length || 0,
+        restricted_area_count: restricted_area?.length || 0,
+        abandoned_baggage_count: abandoned_baggage?.length || 0,
+        loitering_count: loitering?.length || 0,
+        running_count: running_detection?.length || 0,
+        panic_count: crowd_panic?.length || 0,
+        fight_count: fight_detection?.length || 0,
+      };
+    }
+    if (r.worker_monitoring) ctx.worker_monitoring = r.worker_monitoring;
+    if (r.alerts) {
+      ctx.alerts_summary = {
+        total: r.alerts.length,
+        critical: r.alerts.filter(a => a.severity === "critical").length,
+        high: r.alerts.filter(a => a.severity === "high").length,
+        modules: [...new Set(r.alerts.map(a => a.module))],
+      };
+    }
+    return ctx;
+  }, [r]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isChatLoading) return;
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: text.trim(),
+      timestamp: Date.now(),
+    };
+    addChatMessage(userMsg);
+    setInput("");
+    setChatLoading(true);
+
+    try {
+      const ctx = buildContext();
+      const response = await queryAssistant(text.trim(), ctx);
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: response.answer,
+        timestamp: Date.now(),
+      };
+      addChatMessage(assistantMsg);
+    } catch (err) {
+      const errorMsg: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: "system",
+        content: `Failed to get response from AI Engine. ${err instanceof Error ? err.message : "Check if the backend is running."}`,
+        timestamp: Date.now(),
+      };
+      addChatMessage(errorMsg);
+    } finally {
+      setChatLoading(false);
+    }
+  }, [isChatLoading, addChatMessage, setChatLoading, buildContext]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
+  // Parse the ai_master_report into sections
+  const reportSections = useMemo(() => {
+    if (!r?.ai_master_report) return null;
+    const text = r.ai_master_report;
+    // Try to split on markdown-style headers or numbered sections
+    const sections: { title: string; content: string }[] = [];
+    const lines = text.split("\n");
+    let currentTitle = "Executive Summary";
+    let currentContent: string[] = [];
+
+    for (const line of lines) {
+      // Match markdown headers (## Title) or numbered titles (1. Title)
+      const headerMatch = line.match(/^#{1,3}\s+(.+)/) || line.match(/^\d+\.\s*\*?\*?(.+?)\*?\*?\s*$/);
+      if (headerMatch) {
+        if (currentContent.length > 0) {
+          sections.push({ title: currentTitle, content: currentContent.join("\n").trim() });
+        }
+        currentTitle = headerMatch[1].replace(/\*\*/g, "").trim();
+        currentContent = [];
+      } else {
+        currentContent.push(line);
+      }
+    }
+    if (currentContent.length > 0) {
+      sections.push({ title: currentTitle, content: currentContent.join("\n").trim() });
+    }
+
+    return sections.filter(s => s.content.length > 0);
+  }, [r?.ai_master_report]);
+
+  // ─── Render: No data state ──────────────────────────────────────
+  if (!r && !isProcessing) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-[#555] bg-[#111] rounded-xl border border-white/5">
+        <Brain className="w-10 h-10 opacity-30 mb-3" />
+        <p className="text-[13px] text-white font-medium mb-1">AI Investigation Assistant</p>
+        <p className="text-[10px] text-[#A0A0A0]">Powered by Qwen 3</p>
+        <p className="text-[10px] text-[#555] mt-3">Upload a video to activate</p>
+      </div>
+    );
+  }
+
+  if (isProcessing && !r) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-[#111] rounded-xl border border-white/5">
+        <div className="w-8 h-8 border-2 border-[#B8FF3B] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-[12px] text-white">AI Engine Processing...</p>
+        <p className="text-[10px] text-[#555] mt-1">Intelligence report generating</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-[#111] rounded-xl border border-white/5 overflow-hidden">
+      {/* ── Header ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#0c0c0c] shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-[rgba(184,255,59,0.1)] flex items-center justify-center">
+            <Brain className="w-3.5 h-3.5 text-[#B8FF3B]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-white">AI Investigation Assistant</p>
+            <p className="text-[9px] text-[#555]">Qwen 3 • Analysing detection JSON</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#33FF99] animate-pulse" />
+          {chatMessages.length > 0 && (
+            <button onClick={clearChat} className="text-[9px] text-[#555] hover:text-[#A0A0A0] transition-colors">
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Scrollable content ──────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
+
+        {/* ── AI Report (auto-generated from processing) ──── */}
+        {reportSections && reportSections.length > 0 && (
+          <div className="border border-[rgba(184,255,59,0.1)] rounded-lg overflow-hidden">
+            <button
+              onClick={() => setReportExpanded(!reportExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-[rgba(184,255,59,0.03)] hover:bg-[rgba(184,255,59,0.06)] transition-colors"
+            >
+              <span className="text-[10px] font-semibold text-[#B8FF3B] uppercase tracking-wider flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5" /> AI Intelligence Report
+              </span>
+              {reportExpanded ? <ChevronUp className="w-3.5 h-3.5 text-[#555]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#555]" />}
+            </button>
+
+            <AnimatePresence initial={false}>
+              {reportExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-3 py-3 space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin">
+                    {reportSections.map((s, i) => (
+                      <div key={i}>
+                        <h4 className="text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                          {getSectionIcon(s.title)}
+                          {s.title}
+                        </h4>
+                        <p className="text-[11px] text-[#ccc] leading-relaxed whitespace-pre-wrap">{s.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* ── Fallback: raw report if parsing found nothing ── */}
+        {r?.ai_master_report && (!reportSections || reportSections.length === 0) && (
+          <div className="bg-[#070707] border border-white/5 rounded-lg p-3">
+            <h4 className="text-[10px] font-semibold text-[#B8FF3B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5" /> AI Report
+            </h4>
+            <p className="text-[11px] text-[#ccc] leading-relaxed whitespace-pre-wrap font-mono max-h-[200px] overflow-y-auto scrollbar-thin">
+              {r.ai_master_report}
+            </p>
+          </div>
+        )}
+
+        {/* ── Quick stats badges ─────────────────────────────── */}
+        {r && (
+          <div className="flex flex-wrap gap-2">
+            <StatBadge icon={Users} label={`${r.crowd_analysis?.maximum_people || 0} crowd`} color="#B8FF3B" />
+            <StatBadge icon={Shield} label={`${r.crime_detection?.total_incidents || 0} incidents`} color="#FF7A00" />
+            <StatBadge icon={HardHat} label={`${r.worker_monitoring?.statistics?.total_workers || 0} workers`} color="#33FF99" />
+            <StatBadge icon={AlertTriangle} label={`${r.alerts?.length || 0} alerts`} color="#FF4D4D" />
+          </div>
+        )}
+
+        {/* ── Chat messages ──────────────────────────────────── */}
+        {chatMessages.map(msg => (
+          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] rounded-lg px-3 py-2 ${
+              msg.role === "user"
+                ? "bg-[rgba(184,255,59,0.1)] border border-[rgba(184,255,59,0.15)]"
+                : msg.role === "system"
+                ? "bg-[rgba(255,77,77,0.06)] border border-[rgba(255,77,77,0.15)]"
+                : "bg-[#070707] border border-white/5"
+            }`}>
+              {msg.role === "system" && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertCircle className="w-3 h-3 text-[#FF4D4D]" />
+                  <span className="text-[9px] text-[#FF4D4D] font-semibold uppercase">Error</span>
+                </div>
+              )}
+              {msg.role === "assistant" && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Brain className="w-3 h-3 text-[#B8FF3B]" />
+                  <span className="text-[9px] text-[#B8FF3B] font-semibold uppercase">Qwen 3</span>
+                </div>
+              )}
+              <p className={`text-[11px] leading-relaxed whitespace-pre-wrap ${
+                msg.role === "user" ? "text-white" : msg.role === "system" ? "text-[#FF4D4D]" : "text-[#ccc]"
+              }`}>
+                {msg.content}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* ── Loading indicator ──────────────────────────────── */}
+        {isChatLoading && (
+          <div className="flex justify-start">
+            <div className="bg-[#070707] border border-white/5 rounded-lg px-3 py-2 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 text-[#B8FF3B] animate-spin" />
+              <span className="text-[11px] text-[#A0A0A0]">Qwen 3 is thinking...</span>
+            </div>
+          </div>
+        )}
+
+        <div ref={chatEndRef} />
+      </div>
+
+      {/* ── Quick prompts (when no chat yet) ─────────────────── */}
+      {chatMessages.length === 0 && r && (
+        <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
+          {QUICK_PROMPTS.map((prompt, i) => (
+            <button key={i} onClick={() => sendMessage(prompt)}
+              className="text-[9px] text-[#A0A0A0] bg-[#070707] border border-white/5 hover:border-[rgba(184,255,59,0.2)] hover:text-[#B8FF3B] px-2.5 py-1 rounded-full transition-colors"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Input bar ──────────────────────────────────────── */}
+      <div className="px-3 py-2.5 border-t border-white/5 bg-[#0c0c0c] shrink-0">
+        <div className="flex items-center gap-2 bg-[#070707] border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-1.5 focus-within:border-[rgba(184,255,59,0.3)] transition-colors">
+          <MessageSquare className="w-3.5 h-3.5 text-[#555] shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={r ? "Ask about this investigation..." : "Process a video first..."}
+            disabled={!r || isChatLoading}
+            className="flex-1 bg-transparent text-[11px] text-white placeholder-[#555] focus:outline-none disabled:cursor-not-allowed"
+          />
+          <button
+            onClick={() => sendMessage(input)}
+            disabled={!input.trim() || isChatLoading || !r}
+            className="w-6 h-6 rounded flex items-center justify-center bg-[#B8FF3B] text-[#070707] hover:bg-[#c8ff5b] disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+          >
+            {isChatLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════ Helpers ═══════════════════════════════════════════════ */
+
+function StatBadge({ icon: Icon, label, color }: { icon: React.ElementType; label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-1.5 bg-[#070707] border border-white/5 px-2 py-1 rounded-full">
+      <Icon className="w-3 h-3" style={{ color }} />
+      <span className="text-[9px] text-[#A0A0A0]">{label}</span>
+    </div>
+  );
+}
+
+function getSectionIcon(title: string) {
+  const t = title.toLowerCase();
+  if (t.includes("crowd")) return <Users className="w-3 h-3 text-[#B8FF3B]" />;
+  if (t.includes("crime") || t.includes("incident")) return <Shield className="w-3 h-3 text-[#FF7A00]" />;
+  if (t.includes("worker") || t.includes("safety")) return <HardHat className="w-3 h-3 text-[#33FF99]" />;
+  if (t.includes("alert") || t.includes("risk")) return <AlertTriangle className="w-3 h-3 text-[#FF4D4D]" />;
+  if (t.includes("recommend") || t.includes("action")) return <Zap className="w-3 h-3 text-[#FFC857]" />;
+  return <Brain className="w-3 h-3 text-[#B8FF3B]" />;
+}

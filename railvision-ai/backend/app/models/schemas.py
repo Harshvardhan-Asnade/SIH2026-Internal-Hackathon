@@ -64,6 +64,7 @@ class QueryRequest(BaseModel):
     
     query: str = Field(..., description="The natural language question to ask the AI Master")
     video_id: str | None = Field(default=None, description="Optional context video ID")
+    context: dict[str, Any] | None = Field(default=None, description="Optional detection JSON context")
 
 class QueryResponse(BaseModel):
     """Response from the /query endpoint."""

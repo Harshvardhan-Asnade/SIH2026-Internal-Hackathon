@@ -16,7 +16,7 @@ class PersonDetectionConfig:
     """Configuration specific to the person-detection module."""
 
     enabled: bool = True
-    model_path: str = "yolo11n.pt"
+    model_path: str = "yolo26n.pt"
     confidence: float = 0.40
     iou_threshold: float = 0.45
     device: str = "cpu"          # "cpu" | "cuda" | "mps"

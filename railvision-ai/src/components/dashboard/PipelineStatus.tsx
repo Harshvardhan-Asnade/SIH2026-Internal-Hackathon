@@ -26,9 +26,9 @@ export function PipelineStatus() {
   };
 
   return (
-    <div className="bg-[#111] border border-[rgba(255,255,255,0.05)] rounded-xl py-1.5 px-6 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0">
+    <div className="bg-[#111] border border-white/5 rounded-xl py-1.5 px-6 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0">
       {/* Background track */}
-      <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-[1px] bg-[rgba(255,255,255,0.08)] z-0" />
+      <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-[1px] bg-[rgba(255,255,255,0.05)] z-0" />
 
       {/* Active track */}
       <div
@@ -49,8 +49,8 @@ export function PipelineStatus() {
           <div key={stage.id} className="relative z-10 flex flex-row items-center gap-2 bg-[#111] px-2 rounded-full">
             <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
               state === "completed" ? "bg-[#B8FF3B] text-[#070707] shadow-[0_0_8px_rgba(184,255,59,0.3)]" :
-              state === "active" ? "bg-[#0a0a0a] border border-[#B8FF3B] text-[#B8FF3B] shadow-[0_0_10px_rgba(184,255,59,0.2)] animate-pulse" :
-              "bg-[#181818] border border-[rgba(255,255,255,0.06)] text-[#555]"
+              state === "active" ? "bg-[#070707] border border-[#B8FF3B] text-[#B8FF3B] shadow-[0_0_10px_rgba(184,255,59,0.2)] animate-pulse" :
+              "bg-[#181818] border border-white/5 text-[#555]"
             }`}>
               {state === "completed" ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Icon className="w-2.5 h-2.5" />}
             </div>

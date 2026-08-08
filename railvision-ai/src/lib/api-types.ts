@@ -94,10 +94,12 @@ export interface ProcessingResult {
   processing_time: number;
   fps: number;
   detections: Detection[];
+  person_detection?: Record<string, unknown>;
   crowd_analysis?: CrowdAnalysisResult;
   crime_detection?: CrimeDetectionResult;
-  work_monitoring?: WorkMonitoringResult;
+  worker_monitoring?: WorkMonitoringResult;
   alerts?: Alert[];
+  ai_master_report?: string;
 }
 
 // ── Upload response ─────────────────────────────────────────────────
@@ -120,6 +122,19 @@ export interface HealthResponse {
   model_loaded: boolean;
   device: string;
   version: string;
+}
+
+// ── Natural Language Query ──────────────────────────────────────────
+export interface QueryRequest {
+  query: string;
+  video_id?: string;
+  context?: Record<string, unknown>;
+}
+
+export interface QueryResponse {
+  status: string;
+  answer: string;
+  confidence: string;
 }
 
 // ── Error response ──────────────────────────────────────────────────

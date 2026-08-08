@@ -1,11 +1,12 @@
 "use client";
 
 import { TopHeader } from "@/components/dashboard/TopHeader";
-import { UploadQueue } from "@/components/dashboard/UploadQueue";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { VideoWorkspace } from "@/components/dashboard/VideoWorkspace";
-import { LiveIntelligence } from "@/components/dashboard/LiveIntelligence";
 import { PipelineStatus } from "@/components/dashboard/PipelineStatus";
 import { DynamicTabs } from "@/components/dashboard/DynamicTabs";
+
+import { AIAssistant } from "@/components/dashboard/AIAssistant";
 import { useWorkspaceStore } from "@/lib/store";
 import { useEffect } from "react";
 
@@ -20,25 +21,36 @@ export default function DashboardPage() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#070707]">
       <TopHeader />
 
-      {/*
-        12-column grid layout:
-        Left  (Upload)    → 2.5 cols  ~220px
-        Center (Video)    → 6.5 cols  flex-1
-        Right  (Intel)    → 3 cols    ~280px
-      */}
-      <div className="flex flex-col flex-1 min-h-0 px-4 pt-3 pb-3 gap-3">
-        {/* ── Tier 1: Three Pillars ───────────────────────── */}
-        <div className="flex gap-3 min-h-0" style={{ height: "calc(56vh - 40px)", minHeight: "340px" }}>
-          <UploadQueue />
-          <VideoWorkspace />
-          <LiveIntelligence />
+      <div className="flex flex-1 min-h-0 px-3 pt-3 pb-3 gap-3">
+        {/* ── Left Sidebar (Upload & Actions) ────────────── */}
+        <Sidebar />
+
+        {/* ── Main Content Area (Scrollable single column) ─ */}
+        <div className="flex-1 flex flex-col gap-3 min-w-0 min-h-0 overflow-y-auto scrollbar-thin pr-1 pb-4">
+          
+
+
+          {/* Investigation Split: Video (60%) + AI Chat (40%) */}
+          <div className="flex gap-3 h-[450px] shrink-0">
+            <div className="flex-[6] min-w-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+              <VideoWorkspace />
+            </div>
+            <div className="flex-[4] min-w-0 bg-[#111] rounded-xl overflow-hidden flex flex-col">
+              <AIAssistant />
+            </div>
+          </div>
+
+          {/* Pipeline Tracker */}
+          <div className="shrink-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden">
+            <PipelineStatus />
+          </div>
+
+          {/* Detailed Analytics & Reports (Full width) */}
+          <div className="flex-1 min-h-[400px]">
+            <DynamicTabs />
+          </div>
+
         </div>
-
-        {/* ── Tier 2: Pipeline ────────────────────────────── */}
-        <PipelineStatus />
-
-        {/* ── Tier 3: Tabs + Content ──────────────────────── */}
-        <DynamicTabs />
       </div>
     </div>
   );
