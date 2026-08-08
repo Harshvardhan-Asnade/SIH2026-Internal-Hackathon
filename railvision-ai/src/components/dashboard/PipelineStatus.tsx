@@ -4,7 +4,7 @@ import { useWorkspaceStore } from "@/lib/store";
 import { Upload, Focus, Activity, Box, ShieldAlert, CheckCircle2, FileText, Search, Layers } from "lucide-react";
 
 export function PipelineStatus() {
-  const { pipelineStage } = useWorkspaceStore();
+  const pipelineStage = useWorkspaceStore(state => state.pipelineStage);
 
   const stages = [
     { id: "upload", label: "Upload", icon: Upload },
@@ -26,7 +26,7 @@ export function PipelineStatus() {
   };
 
   return (
-    <div className="bg-[#111] border border-white/5 rounded-xl py-1.5 px-6 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0">
+    <div className="bg-[#111] border border-white/5 rounded-xl py-2 px-8 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0 shadow-md">
       {/* Background track */}
       <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-[1px] bg-[rgba(255,255,255,0.05)] z-0" />
 

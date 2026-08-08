@@ -43,7 +43,11 @@ def get_upload_path(video_id: str, original_filename: str) -> Path:
     settings = get_settings()
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_name = Path(original_filename).name  # strip any directory components
+    import re
+    # Strip any directory components and remove dangerous characters
+    base_name = Path(original_filename).name
+    safe_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', base_name)
+    
     dest = settings.upload_dir / f"{video_id}_{safe_name}"
     return dest
 

@@ -1,4 +1,6 @@
-"use client";
+import sys
+
+content = """\"use client\";
 
 import { useWorkspaceStore } from "@/lib/store";
 import {
@@ -6,7 +8,6 @@ import {
   Download, Scan, ChevronLeft, ChevronRight,
   Activity
 } from "lucide-react";
-import { useShallow } from 'zustand/react/shallow';
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 export function VideoWorkspace() {
@@ -15,12 +16,7 @@ export function VideoWorkspace() {
     isProcessing, pipelineStage, uploadProgress,
     processingResult, jumpToFrameTrigger, overlays, toggleOverlay,
     updateVideoState, videoState,
-  } = useWorkspaceStore(useShallow(state => ({
-    activePreviewUrl: state.activePreviewUrl, resultVideoUrl: state.resultVideoUrl,
-    isProcessing: state.isProcessing, pipelineStage: state.pipelineStage, uploadProgress: state.uploadProgress,
-    processingResult: state.processingResult, jumpToFrameTrigger: state.jumpToFrameTrigger, overlays: state.overlays, toggleOverlay: state.toggleOverlay,
-    updateVideoState: state.updateVideoState, videoState: state.videoState,
-  })));
+  } = useWorkspaceStore();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,7 +129,7 @@ export function VideoWorkspace() {
   }, [processingResult, fps]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#0c0c0c] border border-white/5 rounded-xl overflow-hidden relative shadow-lg" ref={containerRef}>
+    <div className="flex-1 flex flex-col min-w-0 bg-[#0c0c0c] border border-white/5 rounded-xl overflow-hidden relative" ref={containerRef}>
       
       {/* ── Video Viewport (Strict Containment) ──────────────── */}
       <div className="flex-1 min-h-0 bg-black relative flex items-center justify-center overflow-hidden">
@@ -156,7 +152,7 @@ export function VideoWorkspace() {
                 <span>{uploadProgress}%</span>
               </div>
               <div className="h-1.5 bg-[#181818] rounded-full overflow-hidden">
-                <div className="h-full bg-[#B8FF3B] rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
+                <div className="h-full bg-[#B8FF3B] rounded-full transition-all duration-200" style={{ width: \`${uploadProgress}%\` }} />
               </div>
             </div>
           </div>
@@ -184,7 +180,7 @@ export function VideoWorkspace() {
             className="relative flex items-center justify-center" 
             style={{ 
               width: "100%", height: "100%", 
-              aspectRatio: `${videoDims.w} / ${videoDims.h}`,
+              aspectRatio: \`${videoDims.w} / ${videoDims.h}\`,
               maxHeight: "100%", maxWidth: "100%"
             }}
           >
@@ -224,7 +220,7 @@ export function VideoWorkspace() {
                 <div 
                   key={i} 
                   className="absolute border-2 z-10 pointer-events-none"
-                  style={{ left: `${left}%`, top: `${top}%`, width: `${width}%`, height: `${height}%`, borderColor: color }}
+                  style={{ left: \`${left}%\`, top: \`${top}%\`, width: \`${width}%\`, height: \`${height}%\`, borderColor: color }}
                 >
                   <div 
                     className="absolute bottom-full left-[-2px] px-1 text-[8px] font-mono whitespace-nowrap text-black font-bold"
@@ -294,13 +290,13 @@ export function VideoWorkspace() {
                }
              }}>
           <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-[4px] bg-[#181818] rounded-full overflow-hidden">
-             <div className="h-full bg-white/20 transition-all pointer-events-none" style={{ width: `${(videoState.currentTime / videoState.duration) * 100}%` }} />
+             <div className="h-full bg-white/20 transition-all pointer-events-none" style={{ width: \`${(videoState.currentTime / videoState.duration) * 100}%\` }} />
           </div>
           
           {/* Playhead */}
           <div
             className="absolute top-0 bottom-0 w-[2px] bg-white z-20 pointer-events-none"
-            style={{ left: `${4 + (videoState.duration ? (videoState.currentTime / videoState.duration) * (100 - 3.2) : 0)}%` }}
+            style={{ left: \`${4 + (videoState.duration ? (videoState.currentTime / videoState.duration) * (100 - 3.2) : 0)}%\` }}
           />
 
           {/* Detection Markers */}
@@ -314,7 +310,7 @@ export function VideoWorkspace() {
                 key={i}
                 onClick={(e) => { e.stopPropagation(); useWorkspaceStore.getState().triggerJumpToFrame(alert.frame!); }}
                 className="absolute top-1/2 -translate-y-1/2 w-1.5 h-3.5 rounded-full cursor-pointer hover:scale-[2.5] transition-transform z-10 group"
-                style={{ left: `calc(16px + ${pos}% - 24px)`, backgroundColor: c }}
+                style={{ left: \`calc(16px + ${pos}% - 24px)\`, backgroundColor: c }}
               >
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-[rgba(255,255,255,0.15)] px-2 py-1.5 rounded text-[10px] whitespace-nowrap pointer-events-none z-50 flex flex-col items-center shadow-xl">
                   <span className="font-bold" style={{ color: c }}>{alert.severity.toUpperCase()}</span>
@@ -354,7 +350,7 @@ export function VideoWorkspace() {
             <div className="absolute bottom-full mb-2 right-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden shadow-xl z-50">
               {[0.25, 0.5, 1, 1.5, 2].map(r => (
                 <button key={r} onClick={() => setPlaybackRate(r)}
-                  className={`block w-full px-4 py-2 text-[11px] text-left hover:bg-white/5 \${videoState.playbackRate === r ? "text-[#B8FF3B]" : "text-[#A0A0A0]"}`}
+                  className={\`block w-full px-4 py-2 text-[11px] text-left hover:bg-white/5 \${videoState.playbackRate === r ? "text-[#B8FF3B]" : "text-[#A0A0A0]"}\`}
                 >{r}x</button>
               ))}
             </div>
@@ -387,7 +383,7 @@ export function VideoWorkspace() {
             >
               <div className="flex justify-between items-start z-10">
                 <span className="text-[10px] font-mono text-[#A0A0A0]">F{kf.frame}</span>
-                <div className={`w-1.5 h-1.5 rounded-full \${kf.severity === 'critical' ? 'bg-[#FF4D4D]' : 'bg-[#FF7A00]'}`} />
+                <div className={\`w-1.5 h-1.5 rounded-full \${kf.severity === 'critical' ? 'bg-[#FF4D4D]' : 'bg-[#FF7A00]'}\`} />
               </div>
               <div className="z-10">
                 <p className="text-[10px] text-white font-medium truncate">{kf.module}</p>
@@ -402,3 +398,7 @@ export function VideoWorkspace() {
     </div>
   );
 }
+"""
+
+with open("src/components/dashboard/VideoWorkspace.tsx", "w") as f:
+    f.write(content)

@@ -123,6 +123,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"Unhandled server error on {request.url.path}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred.", "path": str(request.url.path)}
+    )
+
 # ── CORS (wide-open for local dev — tighten in production) ───────────
 app.add_middleware(
     CORSMiddleware,

@@ -15,6 +15,8 @@ import { KPIRow } from "@/components/dashboard/KPIRow";
    Sidebar — Unified left panel combining Upload, Pipeline, & Stats
    ═══════════════════════════════════════════════════════════════ */
 
+import { useShallow } from 'zustand/react/shallow';
+
 export function Sidebar() {
   const {
     activeFile, setActiveFile, isUploading, setIsUploading,
@@ -22,7 +24,13 @@ export function Sidebar() {
     setPipelineStage, setProcessingResult, setError,
     setResultVideoUrl, setVideoId, error, pipelineStage, uploadProgress,
     processingResult,
-  } = useWorkspaceStore();
+  } = useWorkspaceStore(useShallow(state => ({
+    activeFile: state.activeFile, setActiveFile: state.setActiveFile, isUploading: state.isUploading, setIsUploading: state.setIsUploading,
+    setUploadProgress: state.setUploadProgress, isProcessing: state.isProcessing, setIsProcessing: state.setIsProcessing,
+    setPipelineStage: state.setPipelineStage, setProcessingResult: state.setProcessingResult, setError: state.setError,
+    setResultVideoUrl: state.setResultVideoUrl, setVideoId: state.setVideoId, error: state.error, pipelineStage: state.pipelineStage, uploadProgress: state.uploadProgress,
+    processingResult: state.processingResult,
+  })));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadExpanded, setUploadExpanded] = useState(true);
@@ -79,7 +87,17 @@ export function Sidebar() {
       setResultVideoUrl(getResultVideoUrl(uploadRes.video_id));
       setIsProcessing(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || (err as Error)?.message || "Processing failed. Check backend is running.";
+      let msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      if (!msg) {
+        const errorMsg = (err as Error)?.message || "";
+        if (errorMsg.toLowerCase().includes("timeout")) {
+          msg = "Processing timed out. The video is too large or the AI engine is overloaded.";
+        } else if (errorMsg.toLowerCase().includes("network error")) {
+          msg = "Network Error: Cannot connect to the AI engine. Is the backend running?";
+        } else {
+          msg = errorMsg || "Processing failed. Check backend is running.";
+        }
+      }
       setError(msg);
       setIsUploading(false);
       setIsProcessing(false);
@@ -91,10 +109,10 @@ export function Sidebar() {
   const isDone = pipelineStage === "report";
 
   return (
-    <div className="w-[220px] flex-shrink-0 flex flex-col gap-2 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin">
+    <div className="w-64 flex-shrink-0 flex flex-col gap-4 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin">
 
       {/* ═══════════ SECTION 1: Upload Zone ═══════════════════ */}
-      <div className="bg-[#111] border border-white/5 rounded-xl p-3 flex-shrink-0">
+      <div className="bg-[#111] border border-white/5 rounded-xl p-4 flex-shrink-0 shadow-sm">
         <button
           onClick={() => setUploadExpanded(!uploadExpanded)}
           className="w-full flex items-center justify-between text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-widest mb-1"

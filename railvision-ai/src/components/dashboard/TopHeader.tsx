@@ -1,10 +1,17 @@
 "use client";
 
 import { useWorkspaceStore } from "@/lib/store";
+import { useShallow } from 'zustand/react/shallow';
 import { useState, useEffect } from "react";
 
 export function TopHeader() {
-  const { isProcessing, pipelineStage, isDemoMode, startDemoMode, setActiveTab } = useWorkspaceStore();
+  const { isProcessing, pipelineStage, isDemoMode, startDemoMode, setActiveTab } = useWorkspaceStore(useShallow(state => ({
+    isProcessing: state.isProcessing,
+    pipelineStage: state.pipelineStage,
+    isDemoMode: state.isDemoMode,
+    startDemoMode: state.startDemoMode,
+    setActiveTab: state.setActiveTab
+  })));
   const [time, setTime] = useState("");
 
   useEffect(() => {
@@ -30,14 +37,14 @@ export function TopHeader() {
   const statusColor = isDemoMode ? "#B8FF3B" : isProcessing ? "#FF7A00" : pipelineStage === "report" ? "#B8FF3B" : "#33FF99";
 
   return (
-    <div className="h-11 border-b border-white/5 bg-[#070707] flex items-center justify-between px-5 flex-shrink-0">
-      <div className="flex items-center gap-3">
-        <div className="w-6 h-6 rounded bg-[#B8FF3B] flex items-center justify-center">
-          <span className="font-display font-bold text-[8px] text-[#070707]">RV</span>
+    <div className="h-14 border-b border-white/5 bg-[#070707] flex items-center justify-between px-6 flex-shrink-0 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="w-8 h-8 rounded-lg bg-[#B8FF3B] flex items-center justify-center shadow-[0_0_12px_rgba(184,255,59,0.15)]">
+          <span className="font-display font-bold text-[10px] text-[#070707]">RV</span>
         </div>
-        <span className="text-[12px] font-medium text-white tracking-wide">RailVision AI</span>
-        <div className="w-px h-4 bg-[rgba(255,255,255,0.05)] mx-1" />
-        <span className="text-[10px] text-[#555]">AI Investigation Workspace</span>
+        <span className="text-[13px] font-semibold text-white tracking-wide">RailVision AI</span>
+        <div className="w-px h-5 bg-white/10 mx-2" />
+        <span className="text-[11px] text-[#777] font-medium tracking-wide">AI Investigation Workspace</span>
       </div>
 
       <div className="flex items-center gap-2">

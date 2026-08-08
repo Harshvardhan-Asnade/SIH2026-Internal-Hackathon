@@ -144,29 +144,43 @@ class ModuleRegistry:
         # ── Frame loop ───────────────────────────────────────────────
         frame_idx = 0
         t0 = time.perf_counter()
+        
+        from app.config import get_settings
+        frame_skip = get_settings().frame_skip
+        last_dets = {}
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+        try:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-            # Run every active module on this frame
-            shared_context: dict[str, Any] = {}
-            for _name, module in active.items():
-                dets = module.process_frame(frame, frame_idx, shared_context)
-                module._results.detections.extend(dets)
-                shared_context[_name] = dets
-                frame = module.draw_annotations(frame, dets)
+                if frame_idx % frame_skip == 0:
+                    shared_context: dict[str, Any] = {}
+                    last_dets.clear()
+                    
+                    for _name, module in active.items():
+                        dets = module.process_frame(frame, frame_idx, shared_context)
+                        module._results.detections.extend(dets)
+                        shared_context[_name] = dets
+                        last_dets[_name] = dets
+                        frame = module.draw_annotations(frame, dets)
+                else:
+                    # Skip inference, just draw last known detections
+                    for _name, module in active.items():
+                        if _name in last_dets:
+                            frame = module.draw_annotations(frame, last_dets[_name])
 
-            writer.write(frame)
-            frame_idx += 1
+                writer.write(frame)
+                frame_idx += 1
 
-            if frame_idx % 200 == 0:
-                logger.info("  … registry: %d / %d frames", frame_idx, total_frames)
+                if frame_idx % 200 == 0:
+                    logger.info("  … registry: %d / %d frames", frame_idx, total_frames)
 
-        elapsed = time.perf_counter() - t0
-        cap.release()
-        writer.release()
+            elapsed = time.perf_counter() - t0
+        finally:
+            cap.release()
+            writer.release()
 
         proc_fps = round(frame_idx / elapsed, 2) if elapsed > 0 else 0.0
 

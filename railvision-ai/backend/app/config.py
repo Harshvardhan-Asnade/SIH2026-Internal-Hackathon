@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     # ── Upload constraints ──
     max_upload_size_mb: int = 500
     allowed_extensions: list[str] = [".mp4", ".avi", ".mov", ".mkv"]
+    
+    # ── Inference Optimization ──
+    frame_skip: int = 2  # Process every Nth frame (2 = 50% faster, 3 = 66% faster)
 
     # ── Video output settings ──
     output_codec: str = "mp4v"

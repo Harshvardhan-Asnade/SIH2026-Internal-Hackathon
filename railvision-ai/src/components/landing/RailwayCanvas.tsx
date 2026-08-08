@@ -52,9 +52,14 @@ export default function RailwayCanvas() {
       speed: 0.001 + Math.random() * 0.002,
     }));
 
+    let currentW = 0;
+    let currentH = 0;
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
+      currentW = rect.width;
+      currentH = rect.height;
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
@@ -63,10 +68,9 @@ export default function RailwayCanvas() {
     window.addEventListener("resize", resize);
 
     const draw = () => {
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
-      ctx.clearRect(0, 0, w, h);
-
+      ctx.clearRect(0, 0, currentW, currentH);
+      const w = currentW;
+      const h = currentH;
       const routes = routesRef.current;
 
       // Draw routes (subtle lines)

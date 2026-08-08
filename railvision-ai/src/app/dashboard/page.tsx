@@ -21,32 +21,30 @@ export default function DashboardPage() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#070707]">
       <TopHeader />
 
-      <div className="flex flex-1 min-h-0 px-3 pt-3 pb-3 gap-3">
+      <div className="flex flex-1 min-h-0 p-4 gap-4">
         {/* ── Left Sidebar (Upload & Actions) ────────────── */}
         <Sidebar />
 
-        {/* ── Main Content Area (Scrollable single column) ─ */}
-        <div className="flex-1 flex flex-col gap-3 min-w-0 min-h-0 overflow-y-auto scrollbar-thin pr-1 pb-4">
+        {/* ── Main Content Area (Fixed viewport, flex grid) ─ */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0 min-h-0 pb-2">
           
-
-
           {/* Investigation Split: Video (60%) + AI Chat (40%) */}
-          <div className="flex gap-3 h-[450px] shrink-0">
-            <div className="flex-[6] min-w-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+          <div className="flex gap-4 flex-[5] min-h-0 shrink-0">
+            <div className="flex-[6] min-w-0 flex flex-col">
               <VideoWorkspace />
             </div>
-            <div className="flex-[4] min-w-0 bg-[#111] rounded-xl overflow-hidden flex flex-col">
+            <div className="flex-[4] min-w-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden flex flex-col shadow-lg">
               <AIAssistant />
             </div>
           </div>
 
           {/* Pipeline Tracker */}
-          <div className="shrink-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden">
+          <div className="shrink-0">
             <PipelineStatus />
           </div>
 
           {/* Detailed Analytics & Reports (Full width) */}
-          <div className="flex-1 min-h-[400px]">
+          <div className="flex-[4] min-h-0 flex flex-col">
             <DynamicTabs />
           </div>
 

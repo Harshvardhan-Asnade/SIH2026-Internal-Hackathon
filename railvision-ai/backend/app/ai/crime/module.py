@@ -266,7 +266,7 @@ class CrimeDetectionModule(BaseAIModule):
                 cv2.putText(
                     frame, f"DANGER: {zone_info['name']}",
                     (label_pt[0] + 5, label_pt[1] + 18),
-                    _FONT, 0.5, _RED, 1, cv2.LINE_AA,
+                    _FONT, 0.4, _RED, 1, cv2.LINE_AA,
                 )
 
         # ── Draw restricted-area polygons ────────────────────────────
@@ -281,7 +281,7 @@ class CrimeDetectionModule(BaseAIModule):
                 cv2.putText(
                     frame, f"RESTRICTED: {zone.name}",
                     (pts_list[0][0] + 5, pts_list[0][1] + 18),
-                    _FONT, 0.45, _YELLOW, 1, cv2.LINE_AA,
+                    _FONT, 0.4, _YELLOW, 1, cv2.LINE_AA,
                 )
 
         # ── Alert banners (top-right) ────────────────────────────────

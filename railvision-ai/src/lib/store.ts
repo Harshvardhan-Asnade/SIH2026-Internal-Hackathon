@@ -173,28 +173,35 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setChatLoading: (v) => set({ isChatLoading: v }),
   clearChat: () => set({ chatMessages: [] }),
 
-  resetWorkspace: () => set({
-    activeFile: null,
-    activePreviewUrl: null,
-    resultVideoUrl: null,
-    videoId: null,
-    uploadProgress: 0,
-    isUploading: false,
-    isProcessing: false,
-    pipelineStage: 'idle',
-    processingResult: null,
-    error: null,
-    videoState: { ...defaultVideoState },
-    overlays: { ...defaultOverlays },
-    activeTab: 'overview',
-    jumpToFrameTrigger: null,
-    selectedAlert: null,
-    selectedCrimeEvent: null,
-    alertFilter: 'all',
-    moduleFilter: 'all',
-    chatMessages: [],
-    isChatLoading: false,
-  }),
+  resetWorkspace: () => {
+    const old = get().activePreviewUrl;
+    if (old && !get().isDemoMode) {
+      URL.revokeObjectURL(old);
+    }
+    set({
+      activeFile: null,
+      activePreviewUrl: null,
+      resultVideoUrl: null,
+      videoId: null,
+      uploadProgress: 0,
+      isUploading: false,
+      isProcessing: false,
+      pipelineStage: 'idle',
+      processingResult: null,
+      error: null,
+      videoState: { ...defaultVideoState },
+      overlays: { ...defaultOverlays },
+      activeTab: 'overview',
+      jumpToFrameTrigger: null,
+      selectedAlert: null,
+      selectedCrimeEvent: null,
+      alertFilter: 'all',
+      moduleFilter: 'all',
+      chatMessages: [],
+      isChatLoading: false,
+      isDemoMode: false,
+    });
+  },
 
   isDemoMode: false,
   startDemoMode: () => {

@@ -95,7 +95,8 @@ async def upload_video(
     video_id = generate_video_id()
     dest = get_upload_path(video_id, file.filename)
 
-    dest.write_bytes(content)
+    import asyncio
+    await asyncio.to_thread(dest.write_bytes, content)
     logger.info("Saved upload → %s (%d bytes)", dest, len(content))
 
     return UploadResponse(
@@ -169,21 +170,23 @@ async def process_uploaded_video(
             detail=f"Inference failed: {exc}",
         )
 
+    # ── Generate Knowledge Base ───────────────────────────────────────
+    try:
+        from app.services.knowledge_base import KnowledgeBaseBuilder
+        import app.services.context_builder as cb
+        cb.LATEST_VIDEO_ID = body.video_id
+        
+        kb = KnowledgeBaseBuilder()
+        kb.generate(body.video_id, result)
+    except Exception as exc:
+        logger.exception("Failed to generate Knowledge Base")
+
     # ── Generate AI Master Intelligence Report ────────────────────────
     try:
-        cv_json_dump = result.model_dump(mode="json")
-        
-        # We MUST strip all raw bounding-box arrays, otherwise the LLM gets a 50k+ token prompt 
-        # which crashes or hangs local inference completely!
-        if "detections" in cv_json_dump:
-            del cv_json_dump["detections"]
-            
-        for module_name in ["person_detection", "crowd_analysis", "crime_detection", "worker_monitoring"]:
-            if module_name in cv_json_dump and isinstance(cv_json_dump[module_name], dict):
-                if "detections" in cv_json_dump[module_name]:
-                    del cv_json_dump[module_name]["detections"]
-            
-        report = await llm_service.generate_report(cv_json_dump)
+        from app.services.context_builder import ContextBuilder
+        cb2 = ContextBuilder()
+        report_prompt = cb2.build_prompt("Generate a comprehensive executive intelligence report for this video.", body.video_id)
+        report = await llm_service.query_assistant(report_prompt)
         result.ai_master_report = report
     except Exception as exc:
         logger.exception("Failed to generate AI Master report")
@@ -290,8 +293,15 @@ async def ask_query(
     Optionally accepts a context JSON payload (e.g., detection results).
     """
     try:
-        context = body.context if hasattr(body, 'context') and body.context else None
-        answer = await llm_service.query_assistant(body.query, context)
+        from app.services.context_builder import ContextBuilder
+        cb = ContextBuilder()
+        vid = body.video_id if hasattr(body, 'video_id') and body.video_id else None
+        
+        # Build optimized prompt using the new AI Context Builder
+        optimized_prompt = cb.build_prompt(body.query, vid)
+        
+        # Query LLM with the optimized string
+        answer = await llm_service.query_assistant(optimized_prompt)
         return QueryResponse(status="success", answer=answer, confidence="High")
     except Exception as exc:
         logger.exception("Natural Language Query failed")

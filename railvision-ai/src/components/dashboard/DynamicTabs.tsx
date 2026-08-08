@@ -24,12 +24,18 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } }
 };
 
+import { useShallow } from 'zustand/react/shallow';
+
 export function DynamicTabs() {
   const {
     activeTab, setActiveTab, processingResult, triggerJumpToFrame,
     alertFilter, setAlertFilter, moduleFilter, setModuleFilter,
     isProcessing
-  } = useWorkspaceStore();
+  } = useWorkspaceStore(useShallow(state => ({
+    activeTab: state.activeTab, setActiveTab: state.setActiveTab, processingResult: state.processingResult, triggerJumpToFrame: state.triggerJumpToFrame,
+    alertFilter: state.alertFilter, setAlertFilter: state.setAlertFilter, moduleFilter: state.moduleFilter, setModuleFilter: state.setModuleFilter,
+    isProcessing: state.isProcessing
+  })));
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Eye },
@@ -70,9 +76,9 @@ export function DynamicTabs() {
   }, [r]);
 
   return (
-    <div className="flex flex-col mt-3 flex-1 min-h-0 bg-[#070707] rounded-xl border border-white/5 overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 bg-[#070707] rounded-xl border border-white/5 overflow-hidden shadow-lg">
       {/* ── Tab Navigation ────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-[#0c0c0c] overflow-x-auto relative">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5 bg-[#0c0c0c] overflow-x-auto relative">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -106,7 +112,7 @@ export function DynamicTabs() {
       </div>
 
       {/* ── Dynamic Content Area ──────────────────────────── */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 p-8 overflow-y-auto bg-[#070707]">
         {!r ? (
           isProcessing ? (
             <div className="h-full w-full space-y-6">

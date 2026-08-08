@@ -5,6 +5,7 @@ import { Upload, Video, Clock, AlertCircle, RotateCcw, Loader2, CheckCircle2 } f
 import { useRef } from "react";
 import { uploadVideo, processVideo, getResultVideoUrl } from "@/lib/api-service";
 import { motion, AnimatePresence } from "framer-motion";
+import { useShallow } from 'zustand/react/shallow';
 
 export function UploadQueue() {
   const {
@@ -12,7 +13,12 @@ export function UploadQueue() {
     setUploadProgress, isProcessing, setIsProcessing,
     setPipelineStage, setProcessingResult, setError,
     setResultVideoUrl, setVideoId, error, pipelineStage, uploadProgress,
-  } = useWorkspaceStore();
+  } = useWorkspaceStore(useShallow(state => ({
+    activeFile: state.activeFile, setActiveFile: state.setActiveFile, isUploading: state.isUploading, setIsUploading: state.setIsUploading,
+    setUploadProgress: state.setUploadProgress, isProcessing: state.isProcessing, setIsProcessing: state.setIsProcessing,
+    setPipelineStage: state.setPipelineStage, setProcessingResult: state.setProcessingResult, setError: state.setError,
+    setResultVideoUrl: state.setResultVideoUrl, setVideoId: state.setVideoId, error: state.error, pipelineStage: state.pipelineStage, uploadProgress: state.uploadProgress,
+  })));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

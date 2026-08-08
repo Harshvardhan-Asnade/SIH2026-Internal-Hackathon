@@ -66,16 +66,19 @@ class LLMService:
             logger.error(f"Failed to load LLM: {e}")
             self.is_ready = False
 
-    def _generate_sync(self, cv_json: dict, user_query: str = None) -> str:
+    def _generate_sync(self, cv_json: dict | str, user_query: str = None) -> str:
         """Synchronous generation using HF Transformers."""
         if not self.is_ready or not self.model or not self.tokenizer:
             return "LLM Engine is not initialized or ran out of memory."
 
         # Format input
-        if user_query:
-            prompt_content = f"CONTEXT (CV DATA):\n{json.dumps(cv_json, indent=2)}\n\nUSER QUERY:\n{user_query}"
+        if isinstance(cv_json, str) and not user_query:
+            # We already have a fully optimized prompt string (e.g. from ContextBuilder)
+            prompt_content = cv_json
+        elif user_query:
+            prompt_content = f"CONTEXT (CV DATA):\n{json.dumps(cv_json, indent=2) if isinstance(cv_json, dict) else cv_json}\n\nUSER QUERY:\n{user_query}"
         else:
-            prompt_content = f"Generate an intelligence report based on this CV data:\n{json.dumps(cv_json, indent=2)}"
+            prompt_content = f"Generate an intelligence report based on this CV data:\n{json.dumps(cv_json, indent=2) if isinstance(cv_json, dict) else cv_json}"
 
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -94,7 +97,9 @@ class LLMService:
                 generated_ids = self.model.generate(
                     **model_inputs,
                     max_new_tokens=1024,
-                    temperature=0.3,
+                    temperature=0.4,
+                    repetition_penalty=1.15,
+                    pad_token_id=self.tokenizer.eos_token_id,
                     do_sample=True,
                     top_p=0.9
                 )
@@ -114,10 +119,12 @@ class LLMService:
         """Async wrapper for generating the final video processing report."""
         return await asyncio.to_thread(self._generate_sync, cv_json)
 
-    async def query_assistant(self, query: str, context_json: dict = None) -> str:
+    async def query_assistant(self, query_or_prompt: str, context_json: dict = None) -> str:
         """Async wrapper for the conversational Natural Language Engine."""
-        context = context_json or {"info": "No specific video context provided."}
-        return await asyncio.to_thread(self._generate_sync, context, query)
+        if context_json is None:
+            # Assume query_or_prompt is a fully optimized prompt string
+            return await asyncio.to_thread(self._generate_sync, query_or_prompt)
+        return await asyncio.to_thread(self._generate_sync, context_json, query_or_prompt)
 
 # Singleton instance
 llm_service = LLMService()

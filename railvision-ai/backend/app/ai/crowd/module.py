@@ -47,8 +47,8 @@ logger = logging.getLogger(__name__)
 
 # ── OSD drawing constants ────────────────────────────────────────────
 _FONT = cv2.FONT_HERSHEY_SIMPLEX
-_FONT_SCALE = 0.6
-_FONT_THICK = 2
+_FONT_SCALE = 0.4
+_FONT_THICK = 1
 _WHITE = (255, 255, 255)
 _GREEN = (0, 255, 0)
 _YELLOW = (0, 255, 255)
@@ -241,31 +241,31 @@ class CrowdAnalysisModule(BaseAIModule):
         risk_color = _RISK_COLORS.get(risk, _GREEN)
 
         # Top-left info panel background
-        panel_h = 110
-        panel_w = 320
+        panel_h = 80
+        panel_w = 160
         overlay = frame.copy()
         cv2.rectangle(overlay, (10, 10), (10 + panel_w, 10 + panel_h), (0, 0, 0), cv2.FILLED)
         frame = cv2.addWeighted(overlay, 0.65, frame, 0.35, 0)
 
-        y_pos = 35
+        y_pos = 28
         cv2.putText(
             frame, f"People: {person_count}",
             (20, y_pos), _FONT, _FONT_SCALE, _WHITE, _FONT_THICK, cv2.LINE_AA,
         )
-        y_pos += 28
+        y_pos += 16
         cv2.putText(
             frame, f"Density: {density}",
             (20, y_pos), _FONT, _FONT_SCALE, risk_color, _FONT_THICK, cv2.LINE_AA,
         )
-        y_pos += 28
+        y_pos += 16
         cv2.putText(
             frame, f"Risk: {risk}",
             (20, y_pos), _FONT, _FONT_SCALE, risk_color, _FONT_THICK, cv2.LINE_AA,
         )
-        y_pos += 28
+        y_pos += 16
         cv2.putText(
             frame, f"Tracked: {self._stats.unique_people}",
-            (20, y_pos), _FONT, 0.5, _WHITE, 1, cv2.LINE_AA,
+            (20, y_pos), _FONT, _FONT_SCALE, _WHITE, _FONT_THICK, cv2.LINE_AA,
         )
 
         return frame

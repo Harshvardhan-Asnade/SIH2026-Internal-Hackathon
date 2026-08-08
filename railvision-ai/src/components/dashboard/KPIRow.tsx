@@ -4,7 +4,7 @@ import { useWorkspaceStore } from "@/lib/store";
 import { Activity, Users, AlertTriangle, Target, Cpu } from "lucide-react";
 
 export function KPIRow() {
-  const { processingResult: r } = useWorkspaceStore();
+  const r = useWorkspaceStore(state => state.processingResult);
 
   const crowdPeak = r?.crowd_analysis?.maximum_people || 0;
   const alertCount = r?.alerts?.length || 0;
@@ -58,13 +58,13 @@ export function KPIRow() {
   ];
 
   return (
-    <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
+    <div className="flex flex-col gap-4 flex-shrink-0">
       {cards.map((c, i) => {
         const Icon = c.icon;
         return (
           <div
             key={i}
-            className="flex-1 bg-[#111] border border-white/5 rounded-xl p-3 flex items-center gap-3 hover:border-[rgba(255,255,255,0.1)] transition-colors min-w-0"
+            className="flex-1 bg-[#111] border border-white/5 rounded-xl p-4 flex items-center gap-4 hover:border-[rgba(255,255,255,0.1)] hover:bg-[#151515] hover:shadow-lg transition-all duration-300 min-w-0"
           >
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"

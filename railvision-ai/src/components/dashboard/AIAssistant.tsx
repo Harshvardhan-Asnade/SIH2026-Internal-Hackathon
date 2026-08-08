@@ -25,6 +25,8 @@ const QUICK_PROMPTS = [
 /* ═══════════════════════════════════════════════════════════════════
    AI Assistant Panel
    ═══════════════════════════════════════════════════════════════════ */
+import { useShallow } from 'zustand/react/shallow';
+
 export function AIAssistant() {
   const {
     processingResult: r,
@@ -34,7 +36,15 @@ export function AIAssistant() {
     setChatLoading,
     clearChat,
     isProcessing,
-  } = useWorkspaceStore();
+  } = useWorkspaceStore(useShallow(state => ({
+    processingResult: state.processingResult,
+    chatMessages: state.chatMessages,
+    isChatLoading: state.isChatLoading,
+    addChatMessage: state.addChatMessage,
+    setChatLoading: state.setChatLoading,
+    clearChat: state.clearChat,
+    isProcessing: state.isProcessing
+  })));
 
   const [input, setInput] = useState("");
   const [reportExpanded, setReportExpanded] = useState(true);
@@ -54,7 +64,10 @@ export function AIAssistant() {
       fps: r.fps,
       processing_time: r.processing_time,
     };
-    if (r.crowd_analysis) ctx.crowd_analysis = r.crowd_analysis;
+    if (r.crowd_analysis) {
+      const { trend, heatmap, ...crowdSummary } = r.crowd_analysis;
+      ctx.crowd_analysis = crowdSummary;
+    }
     if (r.crime_detection) {
       // Strip large arrays, keep summary counts
       const { track_intrusion, restricted_area, abandoned_baggage, loitering,
@@ -266,7 +279,7 @@ export function AIAssistant() {
         {/* ── Chat messages ──────────────────────────────────── */}
         {chatMessages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-lg px-3 py-2 ${
+            <div className={`max-w-[85%] rounded-lg px-4 py-3 shadow-sm ${
               msg.role === "user"
                 ? "bg-[rgba(184,255,59,0.1)] border border-[rgba(184,255,59,0.15)]"
                 : msg.role === "system"
@@ -321,8 +334,8 @@ export function AIAssistant() {
       )}
 
       {/* ── Input bar ──────────────────────────────────────── */}
-      <div className="px-3 py-2.5 border-t border-white/5 bg-[#0c0c0c] shrink-0">
-        <div className="flex items-center gap-2 bg-[#070707] border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-1.5 focus-within:border-[rgba(184,255,59,0.3)] transition-colors">
+      <div className="px-4 py-3 border-t border-white/5 bg-[#0c0c0c] shrink-0">
+        <div className="flex items-center gap-3 bg-[#070707] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 focus-within:border-[rgba(184,255,59,0.3)] transition-colors shadow-inner">
           <MessageSquare className="w-3.5 h-3.5 text-[#555] shrink-0" />
           <input
             ref={inputRef}
