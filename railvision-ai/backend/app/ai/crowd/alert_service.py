@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+import uuid
 
 from app.ai.base.base_module import Alert
 from app.ai.crowd.config import CrowdAnalysisConfig
@@ -61,11 +62,15 @@ class CrowdAlertService:
         ):
             alerts.append(
                 Alert(
-                    severity="high",
-                    message=f"High crowd density detected — {count} people (frame {frame_idx})",
-                    module=self.MODULE_NAME,
-                    confidence=min(risk_score + 0.1, 1.0),
+                    id=f"alert_crowd_{uuid.uuid4().hex[:8]}",
                     timestamp=now,
+                    module=self.MODULE_NAME,
+                    event_type="high_density",
+                    severity="high",
+                    confidence=min(risk_score + 0.1, 1.0),
+                    track_ids=[],
+                    frame=frame_idx,
+                    status="ACTIVE",
                 )
             )
             self._fired.add("high_density")
@@ -78,11 +83,15 @@ class CrowdAlertService:
         ):
             alerts.append(
                 Alert(
-                    severity="critical",
-                    message=f"CRITICAL crowd density — {count} people (frame {frame_idx})",
-                    module=self.MODULE_NAME,
-                    confidence=min(risk_score + 0.15, 1.0),
+                    id=f"alert_crowd_{uuid.uuid4().hex[:8]}",
                     timestamp=now,
+                    module=self.MODULE_NAME,
+                    event_type="critical_density",
+                    severity="critical",
+                    confidence=min(risk_score + 0.15, 1.0),
+                    track_ids=[],
+                    frame=frame_idx,
+                    status="ACTIVE",
                 )
             )
             self._fired.add("critical_density")
@@ -94,11 +103,15 @@ class CrowdAlertService:
         ):
             alerts.append(
                 Alert(
-                    severity="high",
-                    message=f"Platform congestion — {count} people detected (frame {frame_idx})",
-                    module=self.MODULE_NAME,
-                    confidence=risk_score,
+                    id=f"alert_crowd_{uuid.uuid4().hex[:8]}",
                     timestamp=now,
+                    module=self.MODULE_NAME,
+                    event_type="platform_congestion",
+                    severity="high",
+                    confidence=risk_score,
+                    track_ids=[],
+                    frame=frame_idx,
+                    status="ACTIVE",
                 )
             )
             self._fired.add("congestion")
@@ -111,11 +124,15 @@ class CrowdAlertService:
         ):
             alerts.append(
                 Alert(
-                    severity="critical",
-                    message=f"⚠ POSSIBLE STAMPEDE RISK — {count} people in frame {frame_idx}",
-                    module=self.MODULE_NAME,
-                    confidence=min(risk_score + 0.2, 1.0),
+                    id=f"alert_crowd_{uuid.uuid4().hex[:8]}",
                     timestamp=now,
+                    module=self.MODULE_NAME,
+                    event_type="stampede_risk",
+                    severity="critical",
+                    confidence=min(risk_score + 0.2, 1.0),
+                    track_ids=[],
+                    frame=frame_idx,
+                    status="ACTIVE",
                 )
             )
             self._fired.add("stampede_risk")

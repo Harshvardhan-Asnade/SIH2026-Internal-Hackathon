@@ -46,10 +46,15 @@ class CrimeAlertEngine:
 
         message = " — ".join(parts)
 
+        import uuid
         return Alert(
-            severity=event.risk.lower(),
-            message=message,
-            module=CrimeAlertEngine.MODULE_NAME,
-            confidence=event.confidence,
+            id=f"alert_crime_{uuid.uuid4().hex[:8]}",
             timestamp=event.timestamp or datetime.now().isoformat(),
+            module=CrimeAlertEngine.MODULE_NAME,
+            event_type=event.event_type,
+            severity=event.risk.lower(),
+            confidence=event.confidence,
+            track_ids=[event.person_id] if event.person_id >= 0 else [],
+            frame=event.frame,
+            status="ACTIVE",
         )

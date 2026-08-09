@@ -22,9 +22,10 @@ class SafetyScoreService:
         """Return compliance rates and overall score."""
         if not workers:
             return {
-                "helmet_compliance": 100.0,
-                "jacket_compliance": 100.0,
-                "overall_safety": 100.0,
+                "helmet_compliance": None,
+                "jacket_compliance": None,
+                "overall_safety": None,
+                "evaluation_status": "NOT_EVALUATED",
             }
 
         helmet_count = sum(1 for w in workers.values() if w.helmet)
@@ -41,4 +42,5 @@ class SafetyScoreService:
             "helmet_compliance": helmet_comp,
             "jacket_compliance": jacket_comp,
             "overall_safety": round(overall, 1),
+            "evaluation_status": "EVALUATED",
         }

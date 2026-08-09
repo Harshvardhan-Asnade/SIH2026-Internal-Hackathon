@@ -168,6 +168,7 @@ class CrowdAnalysisModule(BaseAIModule):
                 detections.append(det)
 
         person_count = len(bboxes)
+        print(f"DEBUG: frame={frame_idx}, len(person_dets)={len(person_dets)}, person_count={person_count}")
 
         # ── Sub-service updates ──────────────────────────────────────
         # Zone counting
@@ -290,12 +291,12 @@ class CrowdAnalysisModule(BaseAIModule):
 
         # Build summary matching the requested JSON shape
         self._results.summary = {
-            "current_people": stats["current_people"],
-            "average_people": stats["average_people"],
-            "maximum_people": stats["maximum_people"],
-            "minimum_people": stats["minimum_people"],
+            "current": stats["current"],
+            "average": stats["average"],
+            "peak": stats["peak"],
+            "minimum": stats["minimum"],
             "peak_frame": stats["peak_frame"],
-            "unique_people_tracked": stats["unique_people_tracked"],
+            "unique_tracks": stats["unique_tracks"],
             "density": risk["density"],
             "occupancy_percentage": self._stats.get_occupancy_percentage(self._config.max_platform_capacity),
             "risk": risk["risk"],

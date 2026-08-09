@@ -148,6 +148,7 @@ class ModuleRegistry:
         from app.config import get_settings
         frame_skip = get_settings().frame_skip
         last_dets = {}
+        frame_metadata = []
 
         try:
             while True:
@@ -165,11 +166,23 @@ class ModuleRegistry:
                         shared_context[_name] = dets
                         last_dets[_name] = dets
                         frame = module.draw_annotations(frame, dets)
+                    
+                    frame_metadata.append({
+                        "frame_number": frame_idx,
+                        "processed_by_ai": True,
+                        "detection_source": "model"
+                    })
                 else:
                     # Skip inference, just draw last known detections
                     for _name, module in active.items():
                         if _name in last_dets:
                             frame = module.draw_annotations(frame, last_dets[_name])
+                            
+                    frame_metadata.append({
+                        "frame_number": frame_idx,
+                        "processed_by_ai": False,
+                        "detection_source": "cached"
+                    })
 
                 writer.write(frame)
                 frame_idx += 1
@@ -198,19 +211,7 @@ class ModuleRegistry:
             module_results[name] = result.to_dict()
 
             # Collect alerts from this module
-            for alert in result.alerts:
-                all_alerts.append(
-                    {
-                        "severity": alert.severity,
-                        "message": alert.message,
-                        "module": alert.module,
-                        "confidence": alert.confidence,
-                        "timestamp": alert.timestamp,
-                        "camera": alert.camera,
-                        "location": alert.location,
-                        **(alert.metadata or {}),
-                    }
-                )
+            all_alerts.extend(module_results[name].get("alerts", []))
 
         # ── Build backward-compatible top-level detections ───────────
         # Copy person_detection detections to top-level for frontend compat
@@ -239,6 +240,7 @@ class ModuleRegistry:
                 "worker_monitoring", {"enabled": False}
             ),
             "alerts": all_alerts,
+            "frame_metadata": frame_metadata,
         }
 
     # ── Singleton ────────────────────────────────────────────────────

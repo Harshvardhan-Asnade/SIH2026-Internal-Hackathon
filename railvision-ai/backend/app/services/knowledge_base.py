@@ -61,6 +61,24 @@ class KnowledgeBaseBuilder:
             "video_duration_seconds": round(total_frames / fps, 2) if fps > 0 else 0,
         }
         self._write(report_dir / "metadata.json", metadata)
+        
+        # ── 1.5 CONSISTENCY VALIDATION ─────────────────────────────
+        # Assert semantic correctness before publishing
+        if worker_raw and worker_raw.get("statistics"):
+            w_stats = worker_raw["statistics"]
+            if w_stats.get("total_workers", 0) == 0:
+                w_stats["helmet_compliance"] = None
+                w_stats["jacket_compliance"] = None
+                w_stats["overall_safety"] = None
+                w_stats["evaluation_status"] = "NOT_EVALUATED"
+                
+        if crowd_raw:
+            c_stats = crowd_raw
+            peak = c_stats.get("peak", 0)
+            avg = c_stats.get("average", 0)
+            if peak < avg:
+                logger.warning(f"Validation failure: peak ({peak}) < average ({avg}). Fixing.")
+                c_stats["peak"] = avg
 
         # ── 2. crowd.json (COMPRESSED — no raw detections) ────────
         crowd_summary = self._build_crowd_summary(crowd_raw, fps)
@@ -101,8 +119,8 @@ class KnowledgeBaseBuilder:
             "total_alerts": len(all_alerts),
             "critical_alerts": len([a for a in all_alerts if a.get("severity", "").lower() == "critical"]),
             "high_alerts": len([a for a in all_alerts if a.get("severity", "").lower() == "high"]),
-            "crowd_maximum": crowd_summary.get("maximum_people", 0),
-            "crowd_average": crowd_summary.get("average_people", 0),
+            "crowd_maximum": crowd_summary.get("peak", 0),
+            "crowd_average": crowd_summary.get("average", 0),
             "crowd_density": crowd_summary.get("density", "Unknown"),
             "crowd_risk": crowd_summary.get("risk", "Unknown"),
             "crime_total_incidents": crime_summary.get("total_incidents", 0),
@@ -139,7 +157,7 @@ class KnowledgeBaseBuilder:
             "video_duration": f"{metadata['video_duration_seconds']:.1f}s ({total_frames} frames at {fps:.1f} FPS)",
             "processing_time": f"{result.processing_time:.1f}s",
             "executive_summary": self._build_executive_summary(crowd_summary, crime_summary, worker_summary, all_alerts, stats),
-            "crowd_overview": f"Max {crowd_summary.get('maximum_people', 0)} people, Avg {crowd_summary.get('average_people', 0)}, Density: {crowd_summary.get('density', 'N/A')}, Risk: {crowd_summary.get('risk', 'N/A')}",
+            "crowd_overview": f"Max {crowd_summary.get('peak', 0)} people, Avg {crowd_summary.get('average', 0)}, Density: {crowd_summary.get('density', 'N/A')}, Risk: {crowd_summary.get('risk', 'N/A')}",
             "crime_overview": f"{crime_summary.get('total_incidents', 0)} incidents detected" + (f" ({crime_summary.get('critical_incidents', 0)} critical)" if crime_summary.get("critical_incidents") else ""),
             "worker_overview": f"{worker_summary.get('total_workers', 0)} workers, Safety: {worker_summary.get('overall_safety', 100)}%",
             "alert_overview": f"{len(all_alerts)} total alerts ({stats['critical_alerts']} critical, {stats['high_alerts']} high)",
@@ -158,6 +176,7 @@ class KnowledgeBaseBuilder:
             "processing_time_seconds": round(result.processing_time, 2),
             "frame_skip": self.settings.frame_skip,
             "model_confidence": self.settings.model_confidence,
+            "frames": rd.get("frame_metadata", [])
         }
         self._write(report_dir / "processing.json", processing)
 
@@ -183,13 +202,13 @@ class KnowledgeBaseBuilder:
         """Extract only the meaningful summary fields from crowd analysis."""
         return {
             "enabled": raw.get("enabled", False),
-            "current_people": raw.get("current_people", 0),
-            "average_people": raw.get("average_people", 0),
-            "maximum_people": raw.get("maximum_people", 0),
-            "minimum_people": raw.get("minimum_people", 0),
+            "current": raw.get("current", 0),
+            "average": raw.get("average", 0),
+            "peak": raw.get("peak", 0),
+            "minimum": raw.get("minimum", 0),
             "peak_frame": raw.get("peak_frame", 0),
             "peak_time": self._fmt_time(raw.get("peak_frame", 0), fps),
-            "unique_people_tracked": raw.get("unique_people_tracked", 0),
+            "unique_tracks": raw.get("unique_tracks", 0),
             "density": raw.get("density", "Unknown"),
             "occupancy_percentage": raw.get("occupancy_percentage", 0),
             "risk": raw.get("risk", "NORMAL"),
@@ -201,7 +220,7 @@ class KnowledgeBaseBuilder:
             "alert_count": len(raw.get("alerts", [])),
             "alerts": [
                 {
-                    "message": a.get("message", ""),
+                    "event_type": a.get("event_type", ""),
                     "severity": a.get("severity", "Medium"),
                     "frame": a.get("frame", 0),
                     "time": self._fmt_time(a.get("frame", 0), fps),
@@ -250,7 +269,7 @@ class KnowledgeBaseBuilder:
             "alert_count": len(raw.get("alerts", [])),
             "alerts": [
                 {
-                    "message": a.get("message", ""),
+                    "event_type": a.get("event_type", ""),
                     "severity": a.get("severity", "High"),
                     "frame": a.get("frame", 0),
                     "time": self._fmt_time(a.get("frame", 0), fps),
@@ -285,7 +304,7 @@ class KnowledgeBaseBuilder:
             "alert_count": len(raw.get("alerts", [])) if isinstance(raw, dict) else 0,
             "alerts": [
                 {
-                    "message": a.get("message", ""),
+                    "event_type": a.get("event_type", ""),
                     "severity": a.get("severity", "Medium"),
                     "frame": a.get("frame", 0),
                 }
@@ -311,7 +330,7 @@ class KnowledgeBaseBuilder:
         for a in (crowd_raw.get("alerts") or []):
             if isinstance(a, dict):
                 all_alerts.append({
-                    "message": a.get("message", "Crowd alert"),
+                    "event_type": a.get("event_type", "Crowd alert"),
                     "severity": a.get("severity", "Medium"),
                     "frame": a.get("frame", 0),
                     "time": self._fmt_time(a.get("frame", 0), fps),
@@ -323,7 +342,7 @@ class KnowledgeBaseBuilder:
         for a in (crime_raw.get("alerts") or []):
             if isinstance(a, dict):
                 all_alerts.append({
-                    "message": a.get("message", "Crime alert"),
+                    "event_type": a.get("event_type", "Crime alert"),
                     "severity": a.get("severity", "High"),
                     "frame": a.get("frame", 0),
                     "time": self._fmt_time(a.get("frame", 0), fps),
@@ -335,7 +354,7 @@ class KnowledgeBaseBuilder:
         for a in (worker_raw.get("alerts") or []) if isinstance(worker_raw, dict) else []:
             if isinstance(a, dict):
                 all_alerts.append({
-                    "message": a.get("message", "Worker alert"),
+                    "event_type": a.get("event_type", "Worker alert"),
                     "severity": a.get("severity", "Medium"),
                     "frame": a.get("frame", 0),
                     "time": self._fmt_time(a.get("frame", 0), fps),
@@ -360,7 +379,7 @@ class KnowledgeBaseBuilder:
                 "time": a.get("time", "00:00"),
                 "frame": a.get("frame", 0),
                 "severity": a.get("severity", "Medium"),
-                "description": a.get("message", "Unknown event"),
+                "description": a.get("event_type", "Unknown event"),
                 "source": a.get("source", "system"),
             })
         timeline.sort(key=lambda x: x.get("frame", 0))
@@ -374,7 +393,7 @@ class KnowledgeBaseBuilder:
 
         # Crowd events
         crowd_stats = crowd_raw.get("statistics", {}) if isinstance(crowd_raw, dict) else {}
-        max_people = crowd_raw.get("maximum_people", 0) if isinstance(crowd_raw, dict) else 0
+        max_people = crowd_raw.get("peak", 0) if isinstance(crowd_raw, dict) else 0
         if max_people > 0:
             peak_frame = crowd_raw.get("peak_frame", 0) if isinstance(crowd_raw, dict) else 0
             events.append({
@@ -483,7 +502,7 @@ class KnowledgeBaseBuilder:
         recs = []
 
         # Crowd recommendations
-        max_p = crowd.get("maximum_people", 0)
+        max_p = crowd.get("peak", 0)
         density = crowd.get("density", "LOW")
         if max_p > 30:
             recs.append({"priority": "Critical", "action": "Deploy additional RPF personnel to manage crowd", "reason": f"Peak crowd of {max_p} detected"})
@@ -522,7 +541,7 @@ class KnowledgeBaseBuilder:
         score = 0
         if crowd.get("risk", "NORMAL") in ("HIGH", "CRITICAL"):
             score += 30
-        if crowd.get("maximum_people", 0) > 30:
+        if crowd.get("peak", 0) > 30:
             score += 20
         if crime.get("total_incidents", 0) > 0:
             score += 30
@@ -545,8 +564,8 @@ class KnowledgeBaseBuilder:
         parts = []
         parts.append(f"Video processed with {stats.get('total_objects_tracked', 0)} tracked objects over {stats.get('video_duration_seconds', 0):.0f} seconds.")
 
-        if crowd.get("maximum_people", 0) > 0:
-            parts.append(f"Crowd analysis: Maximum {crowd['maximum_people']} people, average {crowd.get('average_people', 0)}, density {crowd.get('density', 'N/A')}, risk level {crowd.get('risk', 'N/A')}.")
+        if crowd.get("peak", 0) > 0:
+            parts.append(f"Crowd analysis: Maximum {crowd['peak']} people, average {crowd.get('average', 0)}, density {crowd.get('density', 'N/A')}, risk level {crowd.get('risk', 'N/A')}.")
 
         if crime.get("total_incidents", 0) > 0:
             parts.append(f"Crime detection: {crime['total_incidents']} incidents detected ({crime.get('critical_incidents', 0)} critical).")
@@ -576,8 +595,8 @@ class KnowledgeBaseBuilder:
             f"{summary.get('executive_summary', 'N/A')}",
             f"",
             f"## Crowd Analysis",
-            f"- Maximum People: {crowd.get('maximum_people', 0)}",
-            f"- Average People: {crowd.get('average_people', 0)}",
+            f"- Maximum People: {crowd.get('peak', 0)}",
+            f"- Average People: {crowd.get('average', 0)}",
             f"- Density: {crowd.get('density', 'N/A')}",
             f"- Risk: {crowd.get('risk', 'N/A')}",
             f"- Peak Time: {crowd.get('peak_time', 'N/A')}",
@@ -598,7 +617,7 @@ class KnowledgeBaseBuilder:
             f"## Alerts ({len(alerts)})",
         ]
         for a in alerts[:10]:
-            lines.append(f"- [{a.get('severity', 'N/A')}] {a.get('message', 'N/A')} @ {a.get('time', 'N/A')}")
+            lines.append(f"- [{a.get('severity', 'N/A')}] {a.get('event_type', 'N/A')} @ {a.get('time', 'N/A')}")
         lines += [
             f"",
             f"## Events ({len(events)})",

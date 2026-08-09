@@ -17,8 +17,9 @@ class PersonDetectionConfig:
 
     enabled: bool = True
     model_path: str = "yolo26n.pt"
-    confidence: float = 0.40
-    iou_threshold: float = 0.45
+    confidence: float = 0.25
+    iou_threshold: float = 0.50
+    imgsz: int = 1280
     device: str = "cpu"          # "cpu" | "cuda" | "mps"
     frame_skip: int = 0          # 0 = process every frame
     weights_dir: Path = Path("weights")

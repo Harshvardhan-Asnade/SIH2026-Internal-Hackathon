@@ -8,6 +8,7 @@ idle workers, and zone breaches.
 from __future__ import annotations
 
 from datetime import datetime
+import uuid
 
 from app.ai.base.base_module import Alert
 from app.ai.worker.worker_models import WorkerState
@@ -21,29 +22,41 @@ class WorkerAlertEngine:
     @staticmethod
     def generate_ppe_alert(worker: WorkerState, missing: str) -> Alert:
         return Alert(
-            severity="high",
-            message=f"Worker #{worker.worker_id} detected without {missing}.",
-            module=WorkerAlertEngine.MODULE_NAME,
-            confidence=0.9,
+            id=f"alert_ppe_{uuid.uuid4().hex[:8]}",
             timestamp=datetime.now().isoformat(),
+            module=WorkerAlertEngine.MODULE_NAME,
+            event_type="ppe_violation",
+            severity="high",
+            confidence=0.9,
+            track_ids=[worker.worker_id],
+            frame=worker.last_seen_frame,
+            status="ACTIVE",
         )
 
     @staticmethod
     def generate_idle_alert(worker: WorkerState, idle_secs: float) -> Alert:
         return Alert(
-            severity="medium",
-            message=f"Worker #{worker.worker_id} idle for {idle_secs:.1f}s at {worker.current_zone}.",
-            module=WorkerAlertEngine.MODULE_NAME,
-            confidence=0.85,
+            id=f"alert_idle_{uuid.uuid4().hex[:8]}",
             timestamp=datetime.now().isoformat(),
+            module=WorkerAlertEngine.MODULE_NAME,
+            event_type="idle_worker",
+            severity="medium",
+            confidence=0.85,
+            track_ids=[worker.worker_id],
+            frame=worker.last_seen_frame,
+            status="ACTIVE",
         )
 
     @staticmethod
     def generate_zone_alert(worker: WorkerState) -> Alert:
         return Alert(
-            severity="medium",
-            message=f"Worker #{worker.worker_id} outside designated work zone.",
-            module=WorkerAlertEngine.MODULE_NAME,
-            confidence=0.85,
+            id=f"alert_zone_{uuid.uuid4().hex[:8]}",
             timestamp=datetime.now().isoformat(),
+            module=WorkerAlertEngine.MODULE_NAME,
+            event_type="zone_breach",
+            severity="medium",
+            confidence=0.85,
+            track_ids=[worker.worker_id],
+            frame=worker.last_seen_frame,
+            status="ACTIVE",
         )

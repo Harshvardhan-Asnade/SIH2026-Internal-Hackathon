@@ -93,11 +93,11 @@ class CrowdStatistics:
     def to_dict(self) -> dict[str, Any]:
         """Serialise statistics for JSON response."""
         return {
-            "current_people": self.current_count,
-            "maximum_people": self.maximum_count,
-            "minimum_people": self.minimum_count,
-            "average_people": self.average_count,
-            "unique_people_tracked": self.unique_people,
+            "current": self.current_count,
+            "peak": self.maximum_count,
+            "minimum": self.minimum_count,
+            "average": self.average_count,
+            "unique_tracks": self.unique_people,
             "total_frames_analyzed": self.total_frames,
             "peak_frame": self.peak_frame,
             "trend": self.trend,

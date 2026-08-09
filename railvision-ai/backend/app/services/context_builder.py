@@ -272,11 +272,13 @@ class ContextBuilder:
         if not crowd or not crowd.get("enabled"):
             return "Crowd analysis was not enabled for this video."
         lines = [
-            f"Current People: {crowd.get('current_people', 0)}",
-            f"Average People: {crowd.get('average_people', 0)}",
-            f"Maximum People: {crowd.get('maximum_people', 0)}",
-            f"Minimum People: {crowd.get('minimum_people', 0)}",
-            f"Peak Time: {crowd.get('peak_time', 'N/A')} (frame {crowd.get('peak_frame', 0)})",
+            f"Current People: {crowd.get('current', 0)}",
+            f"Average People: {crowd.get('average', 0)}",
+            f"Peak People: {crowd.get('peak', 0)}",
+            f"Minimum People: {crowd.get('minimum', 0)}",
+            f"Peak Frame: {crowd.get('peak_frame', 0)}",
+            f"Peak Time: {crowd.get('peak_time', 'N/A')}",
+            f"Unique People Tracked: {crowd.get('unique_tracks', 0)}",
             f"Density: {crowd.get('density', 'N/A')}",
             f"Occupancy: {crowd.get('occupancy_percentage', 0)}%",
             f"Risk Level: {crowd.get('risk', 'NORMAL')} (score: {crowd.get('risk_score', 0)})",

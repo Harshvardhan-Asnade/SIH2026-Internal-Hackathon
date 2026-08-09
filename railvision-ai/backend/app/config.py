@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # ── Model configuration (General / Person Detection) ──
     model_name: str = "yolo26n.pt"  # YOLO26 nano — fast, production-ready
-    model_confidence: float = 0.40
+    model_confidence: float = 0.25
     model_iou_threshold: float = 0.45
     model_device: str = "cpu"  # "cuda", "mps", or "cpu"
 
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     allowed_extensions: list[str] = [".mp4", ".avi", ".mov", ".mkv"]
     
     # ── Inference Optimization ──
-    frame_skip: int = 2  # Process every Nth frame (2 = 50% faster, 3 = 66% faster)
+    frame_skip: int = 3  # Process every Nth frame
 
     # ── Video output settings ──
     output_codec: str = "mp4v"

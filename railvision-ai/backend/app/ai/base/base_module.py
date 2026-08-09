@@ -46,14 +46,15 @@ class FrameDetection:
 @dataclass
 class Alert:
     """An alert raised by any module."""
-    severity: str                # "critical" | "high" | "medium" | "low" | "info"
-    message: str
+    id: str
+    timestamp: str
     module: str
+    event_type: str
+    severity: str
     confidence: float = 0.0
-    timestamp: str = ""
-    camera: str = ""
-    location: str = ""
-    metadata: dict[str, Any] = field(default_factory=dict)
+    track_ids: list[int] = field(default_factory=list)
+    frame: int = 0
+    status: str = "ACTIVE"
 
 
 @dataclass
@@ -82,14 +83,15 @@ class ModuleResult:
         ]
         d["alerts"] = [
             {
-                "severity": a.severity,
-                "message": a.message,
-                "module": a.module,
-                "confidence": a.confidence,
+                "id": a.id,
                 "timestamp": a.timestamp,
-                "camera": a.camera,
-                "location": a.location,
-                **(a.metadata or {}),
+                "module": a.module,
+                "event_type": a.event_type,
+                "severity": a.severity,
+                "confidence": a.confidence,
+                "track_ids": a.track_ids,
+                "frame": a.frame,
+                "status": a.status,
             }
             for a in self.alerts
         ]

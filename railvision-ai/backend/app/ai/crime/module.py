@@ -98,6 +98,9 @@ class CrimeDetectionModule(BaseAIModule):
 
         # Latest frame alerts for OSD
         self._latest_alerts: list[str] = []
+        
+        # Temporal frame buffer for Action Recognition
+        self._frame_buffer: list[np.ndarray] = []
 
     # ── Lifecycle ────────────────────────────────────────────────────
     def initialize(self) -> None:
@@ -121,6 +124,7 @@ class CrimeDetectionModule(BaseAIModule):
         self._loitering.reset()
         self._motion.reset()
         self._fight.reset()
+        self._frame_buffer.clear()
 
     # ── Frame-level processing ───────────────────────────────────────
     def process_frame(
@@ -143,6 +147,11 @@ class CrimeDetectionModule(BaseAIModule):
         # ── Consume person detections ────────────────────────────────
         person_dets: list[FrameDetection] = shared_context.get("person_detection", [])
         self._latest_alerts.clear()
+        
+        # Update rolling frame buffer
+        self._frame_buffer.append(frame.copy())
+        if len(self._frame_buffer) > self._config.fight_sequence_length:
+            self._frame_buffer.pop(0)
 
         # Update person tracker
         for det in person_dets:
@@ -154,7 +163,8 @@ class CrimeDetectionModule(BaseAIModule):
                 continue
 
             cx = (det.bbox[0] + det.bbox[2]) // 2
-            cy = (det.bbox[1] + det.bbox[3]) // 2
+            # Use foot point (bottom center) instead of true center for better ground-plane stability
+            foot_y = det.bbox[3]
 
             if tid not in self._persons:
                 self._persons[tid] = TrackedPerson(
@@ -162,7 +172,7 @@ class CrimeDetectionModule(BaseAIModule):
                     first_seen_frame=frame_idx,
                 )
             p = self._persons[tid]
-            p.positions.append((cx, cy))
+            p.positions.append((cx, foot_y))
             p.bboxes.append(det.bbox)
             p.last_seen_frame = frame_idx
             p.confidences.append(det.confidence)
@@ -217,7 +227,7 @@ class CrimeDetectionModule(BaseAIModule):
         if self._config.enable_fight_detection:
             frame_events.extend(
                 self._fight.process(
-                    self._persons, frame_idx, self._fps,
+                    self._persons, frame_idx, self._fps, self._frame_buffer
                 )
             )
 
@@ -315,25 +325,27 @@ class CrimeDetectionModule(BaseAIModule):
     # ── Results ──────────────────────────────────────────────────────
     def get_results(self) -> ModuleResult:
         """Build the crime_detection summary for the JSON response."""
-        # Group events by type
-        events_by_type: dict[str, list[dict[str, Any]]] = {
-            "track_intrusion": [],
-            "restricted_area": [],
-            "abandoned_baggage": [],
-            "loitering": [],
-            "running_detection": [],
-            "crowd_panic": [],
-            "fight_detection": [],
-        }
+        
+        events_by_type: dict[str, Any] = {}
+        
+        def _init_bucket(key: str, enabled: bool):
+            if enabled:
+                events_by_type[key] = []
+            else:
+                events_by_type[key] = "NOT_IMPLEMENTED"
+                
+        _init_bucket("track_intrusion", self._config.enable_track_intrusion)
+        _init_bucket("restricted_area", self._config.enable_restricted_area)
+        _init_bucket("abandoned_baggage", self._config.enable_abandoned_bag)
+        _init_bucket("loitering", self._config.enable_loitering)
+        _init_bucket("running_detection", self._config.enable_running_detection)
+        _init_bucket("crowd_panic", self._config.enable_running_detection)
+        _init_bucket("fight_detection", self._config.enable_fight_detection)
 
         for event in self._events:
             bucket = events_by_type.get(event.event_type)
-            if bucket is not None:
+            if isinstance(bucket, list):
                 bucket.append(event.to_dict())
-            else:
-                events_by_type.setdefault(event.event_type, []).append(
-                    event.to_dict()
-                )
 
         self._results.summary = {
             "total_incidents": len(self._events),

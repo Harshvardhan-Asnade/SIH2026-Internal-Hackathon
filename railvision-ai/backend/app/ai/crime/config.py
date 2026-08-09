@@ -68,13 +68,24 @@ class CrimeDetectionConfig:
     loitering_min_confidence: float = 0.40
 
     # ── Running / Panic ──────────────────────────────────────────────
-    running_speed_threshold_px: float = 25.0    # Pixels per frame
-    running_min_persons: int = 3                # Min simultaneous runners
+    running_speed_threshold: float = 800.0      # Normalized Pixels per Second
+    running_min_frames: int = 10                # Must run for N observations
+    running_smoothing_alpha: float = 0.3        # EMA smoothing for trajectory
+    running_cooldown_seconds: float = 5.0       # Cooldown per track ID
+    running_min_persons: int = 3                # Min simultaneous runners for PANIC
     panic_directional_threshold: float = 0.7    # 70% running same direction
+    
+    # Perspective Normalization (Estimated unless Homography present)
+    perspective_enabled: bool = True
+    calibration_status: str = "ESTIMATED"
 
-    # ── Fight Detection (placeholder) ────────────────────────────────
-    fight_proximity_px: int = 60                # Closeness threshold
-    fight_min_confidence: float = 0.50
+    # ── Fight Detection (Temporal Action Recognition) ─────────────────
+    fight_proximity_px: int = 60                # Candidate generator proximity
+    fight_min_confidence: float = 0.50          # Minimum YOLO confidence for candidate
+    fight_sequence_length: int = 16             # Frames for 3D CNN input
+    fight_classification_threshold: float = 0.70 # Model output confidence
+    fight_min_positive_windows: int = 2         # Consecutive positive windows required
+    fight_cooldown_seconds: float = 5.0         # Cooldown before subsequent alert
 
     # ── Alert confidence floor ───────────────────────────────────────
     alert_min_confidence: float = 0.40

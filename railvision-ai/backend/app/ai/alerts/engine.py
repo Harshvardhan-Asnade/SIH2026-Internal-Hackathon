@@ -83,14 +83,15 @@ class AlertEngine:
         """Serialised version suitable for JSON responses."""
         return [
             {
-                "severity": a.severity,
-                "message": a.message,
-                "module": a.module,
-                "confidence": a.confidence,
+                "id": a.id,
                 "timestamp": a.timestamp,
-                "camera": a.camera,
-                "location": a.location,
-                **(a.metadata or {}),
+                "module": a.module,
+                "event_type": a.event_type,
+                "severity": a.severity,
+                "confidence": a.confidence,
+                "track_ids": a.track_ids,
+                "frame": a.frame,
+                "status": a.status,
             }
             for a in self.get_alerts(**filters)
         ]

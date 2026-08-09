@@ -80,10 +80,13 @@ class PersonDetectionModule(BaseAIModule):
         if self._config.frame_skip > 0 and frame_idx % (self._config.frame_skip + 1) != 0:
             return []
 
-        results = self._model.predict(
+        results = self._model.track(
             frame,
             conf=self._config.confidence,
             iou=self._config.iou_threshold,
+            imgsz=getattr(self._config, "imgsz", 640),
+            persist=True,
+            tracker="bytetrack.yaml",
             verbose=False,
             device=self._config.device,
         )
@@ -98,6 +101,8 @@ class PersonDetectionModule(BaseAIModule):
                 conf = float(box.conf[0])
                 cls_id = int(box.cls[0])
                 cls_name = self._class_names.get(cls_id, str(cls_id))
+                
+                track_id = int(box.id[0]) if box.id is not None else -1
 
                 detections.append(
                     FrameDetection(
@@ -105,6 +110,7 @@ class PersonDetectionModule(BaseAIModule):
                         class_name=cls_name,
                         confidence=round(conf, 4),
                         bbox=[x1, y1, x2, y2],
+                        metadata={"track_id": track_id} if track_id != -1 else {}
                     )
                 )
 
