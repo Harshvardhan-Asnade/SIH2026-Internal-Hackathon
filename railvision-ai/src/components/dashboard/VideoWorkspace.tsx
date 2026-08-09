@@ -119,7 +119,7 @@ export function VideoWorkspace() {
     if (!processingResult || !processingResult.alerts) return [];
     const alerts = processingResult.alerts.filter(a => a.frame !== undefined && a.frame !== null);
     const uniqueFrames = new Set<number>();
-    const gallery: any[] = [];
+    const gallery = [] as typeof alerts;
     for (const a of alerts) {
       if (a.severity !== 'critical' && a.severity !== 'high') continue;
       const f = a.frame!;
@@ -253,10 +253,13 @@ export function VideoWorkspace() {
               <div className="flex flex-col gap-1.5 items-end">
                 <div className="bg-black/60 backdrop-blur-md border border-[#B8FF3B]/30 px-2.5 py-1 rounded shadow-lg text-[10px] font-mono text-[#B8FF3B] flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#B8FF3B] animate-pulse" />
-                  <span>LIVE INFERENCE</span>
+                  <span>VIDEO ANALYSIS</span>
                 </div>
                 <div className="bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded shadow-lg text-[10px] font-mono text-white flex items-center gap-2">
-                  <span className="text-[#A0A0A0]">FPS</span> <span>{fps}</span>
+                  <span className="text-[#A0A0A0]">SRC FPS</span> <span>30</span>
+                </div>
+                <div className="bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded shadow-lg text-[10px] font-mono text-white flex items-center gap-2">
+                  <span className="text-[#A0A0A0]">AI FPS</span> <span>{fps}</span>
                 </div>
               </div>
             </div>
@@ -272,7 +275,7 @@ export function VideoWorkspace() {
               </div>
               <div className="flex flex-col gap-1.5 items-end">
                 <div className="bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded shadow-lg text-[10px] font-mono text-white flex items-center gap-2">
-                  <span className="text-[#A0A0A0]">YOLOv11</span> <span className="text-[#33FF99]">ACTIVE</span>
+                  <span className="text-[#A0A0A0]">YOLO26</span> <span className="text-[#33FF99]">ACTIVE</span>
                 </div>
                 <div className="bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded shadow-lg text-[10px] font-mono text-white flex items-center gap-2">
                   <span className="text-[#A0A0A0]">ByteTrack</span> <span className="text-[#33FF99]">ACTIVE</span>

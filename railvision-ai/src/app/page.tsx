@@ -76,7 +76,7 @@ const capabilities = [
 /* ── Architecture ──────────────────────────────────────────── */
 const archSteps = [
   { label: "Existing Cameras", sub: "50,000+ across Indian Railways" },
-  { label: "AI Engine", sub: "YOLOv11 + ByteTrack on GPU" },
+  { label: "AI Engine", sub: "YOLO26 + ByteTrack on GPU" },
   { label: "Event Engine", sub: "Real-time classification & scoring" },
   { label: "Dashboard", sub: "Unified command interface" },
   { label: "Control Room", sub: "Actionable intelligence" },

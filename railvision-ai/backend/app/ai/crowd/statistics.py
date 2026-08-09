@@ -100,5 +100,6 @@ class CrowdStatistics:
             "unique_tracks": self.unique_people,
             "total_frames_analyzed": self.total_frames,
             "peak_frame": self.peak_frame,
+            "peak_timestamp": self.peak_frame, # In backend we map frame to timestamp later or just pass frame index for now
             "trend": self.trend,
         }

@@ -4,10 +4,10 @@ import { useWorkspaceStore } from "@/lib/store";
 import type { PipelineStage } from "@/lib/store";
 import {
   Upload, Video, AlertCircle, RotateCcw, Loader2, CheckCircle2,
-  Search, Focus, Activity, Layers, ShieldAlert, FileText, ChevronDown, ChevronUp,
+  Search, Focus, Activity, Layers, ShieldAlert, FileText, ChevronDown, ChevronUp, Camera, VideoOff
 } from "lucide-react";
 import { useRef, useState } from "react";
-import { uploadVideo, processVideo, getResultVideoUrl } from "@/lib/api-service";
+import { uploadVideo, processVideo, getResultVideoUrl, getReportStatus } from "@/lib/api-service";
 import { motion, AnimatePresence } from "framer-motion";
 import { KPIRow } from "@/components/dashboard/KPIRow";
 
@@ -23,13 +23,13 @@ export function Sidebar() {
     setUploadProgress, isProcessing, setIsProcessing,
     setPipelineStage, setProcessingResult, setError,
     setResultVideoUrl, setVideoId, error, pipelineStage, uploadProgress,
-    processingResult,
+    processingResult, isWebcamActive, setIsWebcamActive
   } = useWorkspaceStore(useShallow(state => ({
     activeFile: state.activeFile, setActiveFile: state.setActiveFile, isUploading: state.isUploading, setIsUploading: state.setIsUploading,
     setUploadProgress: state.setUploadProgress, isProcessing: state.isProcessing, setIsProcessing: state.setIsProcessing,
     setPipelineStage: state.setPipelineStage, setProcessingResult: state.setProcessingResult, setError: state.setError,
     setResultVideoUrl: state.setResultVideoUrl, setVideoId: state.setVideoId, error: state.error, pipelineStage: state.pipelineStage, uploadProgress: state.uploadProgress,
-    processingResult: state.processingResult,
+    processingResult: state.processingResult, isWebcamActive: state.isWebcamActive, setIsWebcamActive: state.setIsWebcamActive
   })));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +86,52 @@ export function Sidebar() {
       setProcessingResult(result);
       setResultVideoUrl(getResultVideoUrl(uploadRes.video_id));
       setIsProcessing(false);
+
+      // ── Poll for AI Master Report ──────────────────────────────
+      (async () => {
+        try {
+          const maxAttempts = 60; // 2 mins max
+          let attempts = 0;
+          while (attempts < maxAttempts) {
+            attempts++;
+            await delay(2000);
+            const reportData = await getReportStatus(uploadRes.video_id);
+            const st = reportData.status.toUpperCase();
+            
+            if (st === "COMPLETE") {
+              const currentRes = useWorkspaceStore.getState().processingResult;
+              if (currentRes) {
+                setProcessingResult({ 
+                  ...currentRes, 
+                  ai_master_report: reportData.report || "No report generated." 
+                });
+              }
+              break;
+            } else if (st === "FAILED") {
+              const currentRes = useWorkspaceStore.getState().processingResult;
+              if (currentRes) {
+                setProcessingResult({ 
+                  ...currentRes, 
+                  ai_master_report: `FAILED: ${reportData.error || "Unknown error occurred during report generation."}`
+                });
+              }
+              break;
+            }
+          }
+          if (attempts >= maxAttempts) {
+            const currentRes = useWorkspaceStore.getState().processingResult;
+            if (currentRes) {
+              setProcessingResult({ ...currentRes, ai_master_report: "FAILED: Generation timed out." });
+            }
+          }
+        } catch (e) {
+          console.error("Report polling failed", e);
+          const currentRes = useWorkspaceStore.getState().processingResult;
+          if (currentRes) {
+            setProcessingResult({ ...currentRes, ai_master_report: "FAILED: Network error while polling report status." });
+          }
+        }
+      })();
     } catch (err: unknown) {
       let msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       if (!msg) {
@@ -146,6 +192,31 @@ export function Sidebar() {
                 <p className="text-[9px] text-[#555] mt-0.5 truncate max-w-[90%] mx-auto">
                   {activeFile ? activeFile.name : "MP4 · AVI · MOV"}
                 </p>
+              </div>
+
+              {/* Webcam Button */}
+              <div className="mt-2">
+                {!isWebcamActive ? (
+                  <button
+                    onClick={() => setIsWebcamActive(true)}
+                    disabled={isRunning}
+                    className="w-full py-2.5 rounded-lg text-[10px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 border border-white/10 bg-[#181818] hover:bg-[#222] hover:border-white/20 text-[#A0A0A0] transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    Use Webcam
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsWebcamActive(false);
+                      setProcessingResult(null);
+                    }}
+                    className="w-full py-2.5 rounded-lg text-[10px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                  >
+                    <VideoOff className="w-3.5 h-3.5" />
+                    Stop Camera
+                  </button>
+                )}
               </div>
             </motion.div>
           )}

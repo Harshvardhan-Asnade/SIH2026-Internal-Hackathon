@@ -80,6 +80,7 @@ class CrimeDetectionConfig:
     calibration_status: str = "ESTIMATED"
 
     # ── Fight Detection (Temporal Action Recognition) ─────────────────
+    fight_detection_enabled: bool = False       # Disable heavy MC3-18 by default
     fight_proximity_px: int = 60                # Candidate generator proximity
     fight_min_confidence: float = 0.50          # Minimum YOLO confidence for candidate
     fight_sequence_length: int = 16             # Frames for 3D CNN input

@@ -17,8 +17,10 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
+import json
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 
 from app.config import get_settings, Settings
@@ -34,6 +36,7 @@ from app.models.schemas import (
 from app.ai.base.module_registry import ModuleRegistry, get_module_registry
 from app.services.video_service import process_video, VideoProcessingError
 from app.services.llm_service import llm_service
+from app.services.webcam_service import webcam_manager
 from app.utils.file_utils import (
     generate_video_id,
     get_output_path,
@@ -122,6 +125,7 @@ async def upload_video(
 )
 async def process_uploaded_video(
     body: ProcessRequest,
+    background_tasks: BackgroundTasks,
     registry: ModuleRegistry = Depends(get_module_registry),
     settings: Settings = Depends(get_settings),
 ):
@@ -170,29 +174,205 @@ async def process_uploaded_video(
             detail=f"Inference failed: {exc}",
         )
 
-    # ── Generate Knowledge Base ───────────────────────────────────────
-    try:
-        from app.services.knowledge_base import KnowledgeBaseBuilder
-        import app.services.context_builder as cb
-        cb.LATEST_VIDEO_ID = body.video_id
-        
-        kb = KnowledgeBaseBuilder()
-        kb.generate(body.video_id, result)
-    except Exception as exc:
-        logger.exception("Failed to generate Knowledge Base")
+    # Initialize report status on disk
+    report_dir = get_settings().output_dir / body.video_id / "report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    status_file = report_dir / "report_status.json"
+    
+    # Write initial PENDING/GENERATING state
+    with open(status_file, "w", encoding="utf-8") as f:
+        json.dump({
+            "video_id": body.video_id,
+            "status": "GENERATING",
+            "report": None,
+            "error": None,
+            "started_at": datetime.utcnow().isoformat(),
+            "completed_at": None
+        }, f, indent=2)
 
-    # ── Generate AI Master Intelligence Report ────────────────────────
-    try:
-        from app.services.context_builder import ContextBuilder
-        cb2 = ContextBuilder()
-        report_prompt = cb2.build_prompt("Generate a comprehensive executive intelligence report for this video.", body.video_id)
-        report = await llm_service.query_assistant(report_prompt)
-        result.ai_master_report = report
-    except Exception as exc:
-        logger.exception("Failed to generate AI Master report")
-        result.ai_master_report = f"LLM Integration Error: {exc}"
+    # Set placeholder so frontend doesn't hang (legacy support, though not strictly needed anymore)
+    result.ai_master_report = "Report is being generated in the background..."
+
+    async def generate_report_task(vid: str, res: ProcessingResult):
+        r_dir = get_settings().output_dir / vid / "report"
+        s_file = r_dir / "report_status.json"
+        
+        def update_status(status: str, report: str | None = None, error: str | None = None):
+            try:
+                # read existing to keep started_at
+                current = {}
+                if s_file.exists():
+                    with open(s_file, "r", encoding="utf-8") as sf:
+                        current = json.load(sf)
+                current.update({
+                    "status": status,
+                    "report": report,
+                    "error": error,
+                    "completed_at": datetime.utcnow().isoformat() if status in ["COMPLETE", "FAILED"] else None
+                })
+                with open(s_file, "w", encoding="utf-8") as sf:
+                    json.dump(current, sf, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to update report status file: {e}")
+
+        # ── 1. Generate Knowledge Base ────────────────────────────────────
+        try:
+            from app.services.knowledge_base import KnowledgeBaseBuilder
+            import app.services.context_builder as cb
+            cb.LATEST_VIDEO_ID = vid
+            
+            kb = KnowledgeBaseBuilder()
+            kb.generate(vid, res)
+            
+            # Validate required files
+            required = ["summary.json", "crowd.json", "crime.json", "worker.json", "alerts.json", "timeline.json"]
+            missing = [f for f in required if not (r_dir / f).exists()]
+            if missing:
+                raise Exception(f"Knowledge Base generation failed. Missing files: {', '.join(missing)}")
+                
+        except Exception as exc:
+            logger.exception("Failed to generate Knowledge Base")
+            update_status("FAILED", error=f"Knowledge Base Error: {exc}")
+            return
+
+        # ── 2. Generate AI Master Intelligence Report ─────────────────────
+        try:
+            from app.services.context_builder import ContextBuilder
+            cb2 = ContextBuilder()
+            report_prompt = cb2.build_prompt("Generate a comprehensive executive intelligence report for this video.", vid)
+            report_content = await llm_service.query_assistant(report_prompt)
+            
+            if not report_content or not report_content.strip():
+                raise Exception("Qwen generated an empty report.")
+                
+            # Write report to markdown file
+            report_md_file = r_dir / "report.md"
+            with open(report_md_file, "w", encoding="utf-8") as rf:
+                rf.write(report_content)
+                
+            # Final success status
+            update_status("COMPLETE", report=report_content)
+            
+        except Exception as exc:
+            logger.exception("Failed to generate AI Master report")
+            update_status("FAILED", error=f"LLM Generation Error: {exc}")
+
+    background_tasks.add_task(generate_report_task, body.video_id, result)
 
     return result
+
+# ─────────────────────────────────────────────────────────────────────
+# GET /report/{video_id}
+# ─────────────────────────────────────────────────────────────────────
+@router.get(
+    "/report/{video_id}",
+    responses={404: {"model": ErrorResponse}},
+    summary="Get the generated AI Master report",
+)
+async def get_report(video_id: str):
+    """
+    Get the background-generated report for the given video.
+    """
+    status_file = get_settings().output_dir / video_id / "report" / "report_status.json"
+    if not status_file.exists():
+        return {
+            "video_id": video_id,
+            "status": "FAILED",
+            "report": None,
+            "error": "Report not found or never started.",
+            "started_at": None,
+            "completed_at": None
+        }
+        
+    try:
+        with open(status_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        return {
+            "video_id": video_id,
+            "status": "FAILED",
+            "report": None,
+            "error": f"Failed to read report status: {e}",
+            "started_at": None,
+            "completed_at": None
+        }
+
+# ─────────────────────────────────────────────────────────────────────
+# POST /report/{video_id}/retry
+# ─────────────────────────────────────────────────────────────────────
+@router.post(
+    "/report/{video_id}/retry",
+    responses={404: {"model": ErrorResponse}},
+    summary="Retry Qwen Report Generation",
+)
+async def retry_report(video_id: str, background_tasks: BackgroundTasks):
+    """
+    Retry report generation using the existing Knowledge Base.
+    """
+    report_dir = get_settings().output_dir / video_id / "report"
+    status_file = report_dir / "report_status.json"
+    
+    # 1. Update status to GENERATING
+    try:
+        with open(status_file, "w", encoding="utf-8") as f:
+            json.dump({
+                "video_id": video_id,
+                "status": "GENERATING",
+                "report": None,
+                "error": None,
+                "started_at": datetime.utcnow().isoformat(),
+                "completed_at": None
+            }, f, indent=2)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset status: {e}")
+
+    # 2. Add Background Task (Only LLM generation)
+    async def retry_task(vid: str):
+        r_dir = get_settings().output_dir / vid / "report"
+        s_file = r_dir / "report_status.json"
+        
+        def update_status(status: str, report: str | None = None, error: str | None = None):
+            try:
+                current = {}
+                if s_file.exists():
+                    with open(s_file, "r", encoding="utf-8") as sf:
+                        current = json.load(sf)
+                current.update({
+                    "status": status,
+                    "report": report,
+                    "error": error,
+                    "completed_at": datetime.utcnow().isoformat() if status in ["COMPLETE", "FAILED"] else None
+                })
+                with open(s_file, "w", encoding="utf-8") as sf:
+                    json.dump(current, sf, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to update report status file: {e}")
+
+        try:
+            from app.services.context_builder import ContextBuilder
+            import app.services.context_builder as cb
+            cb.LATEST_VIDEO_ID = vid
+            
+            cb2 = ContextBuilder()
+            report_prompt = cb2.build_prompt("Generate a comprehensive executive intelligence report for this video.", vid)
+            report_content = await llm_service.query_assistant(report_prompt)
+            
+            if not report_content or not report_content.strip():
+                raise Exception("Qwen generated an empty report.")
+                
+            report_md_file = r_dir / "report.md"
+            with open(report_md_file, "w", encoding="utf-8") as rf:
+                rf.write(report_content)
+                
+            update_status("COMPLETE", report=report_content)
+            
+        except Exception as exc:
+            logger.exception("Failed to retry AI Master report")
+            update_status("FAILED", error=f"LLM Generation Error: {exc}")
+
+    background_tasks.add_task(retry_task, video_id)
+    
+    return {"message": "Retry task started."}
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -310,3 +490,129 @@ async def ask_query(
             detail=f"Query failed: {exc}",
         )
 
+# ─────────────────────────────────────────────────────────────────────
+# WEBCAM ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────
+@router.post(
+    "/webcam/session",
+    summary="Initialize a new webcam tracking session",
+)
+async def create_webcam_session():
+    """
+    Creates an isolated ModuleRegistry instance for real-time tracking.
+    """
+    import uuid
+    session_id = str(uuid.uuid4())
+    # The session is created inside the WS connection to avoid memory leaks if they never connect.
+    # But returning it allows frontend to connect.
+    return {"session_id": session_id}
+
+@router.websocket("/ws/webcam/{session_id}")
+async def webcam_websocket(websocket: WebSocket, session_id: str):
+    await websocket.accept()
+    logger.info(f"WebSocket connected for webcam session {session_id}")
+    
+    session = webcam_manager.create_session(session_id)
+    try:
+        while True:
+            # Receive JPEG frame bytes from the browser
+            frame_bytes = await websocket.receive_bytes()
+            
+            # Process frame using isolated session (runs synchronously but fast)
+            # In production, might offload to thread, but for local backpressure it's fine.
+            res = session.process_frame(frame_bytes)
+            
+            # Send back annotated JPEG and stats
+            await websocket.send_json(res)
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected for {session_id}")
+    except Exception as e:
+        logger.error(f"WebSocket error for {session_id}: {e}")
+    finally:
+        webcam_manager.end_session(session_id)
+        
+@router.post(
+    "/webcam/report/{session_id}",
+    summary="Generate AI Master Report for a Live Webcam Session",
+)
+async def generate_webcam_report(session_id: str, background_tasks: BackgroundTasks):
+    """
+    Creates a snapshot of current canonical statistics, builds the Knowledge Base,
+    and runs Qwen asynchronously.
+    """
+    session = webcam_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Webcam session not found")
+        
+    # Generate canonical snapshot
+    result = session.generate_snapshot()
+    video_id = f"webcam_{session_id}"
+    
+    report_dir = get_settings().output_dir / video_id / "report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    status_file = report_dir / "report_status.json"
+    
+    # 1. Set status to GENERATING
+    with open(status_file, "w", encoding="utf-8") as f:
+        json.dump({
+            "video_id": video_id,
+            "status": "GENERATING",
+            "report": None,
+            "error": None,
+            "started_at": datetime.utcnow().isoformat(),
+            "completed_at": None
+        }, f, indent=2)
+
+    # 2. Add Background Task
+    async def webcam_report_task(vid: str, res: ProcessingResult):
+        r_dir = get_settings().output_dir / vid / "report"
+        s_file = r_dir / "report_status.json"
+        
+        def update_status(status: str, report: str | None = None, error: str | None = None):
+            try:
+                current = {}
+                if s_file.exists():
+                    with open(s_file, "r", encoding="utf-8") as sf:
+                        current = json.load(sf)
+                current.update({
+                    "status": status,
+                    "report": report,
+                    "error": error,
+                    "completed_at": datetime.utcnow().isoformat() if status in ["COMPLETE", "FAILED"] else None
+                })
+                with open(s_file, "w", encoding="utf-8") as sf:
+                    json.dump(current, sf, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to update report status file: {e}")
+
+        try:
+            # Build Knowledge Base
+            from app.services.knowledge_base import KnowledgeBaseBuilder
+            kbb = KnowledgeBaseBuilder()
+            kbb.generate(vid, res)
+            
+            # Query Qwen
+            from app.services.context_builder import ContextBuilder
+            import app.services.context_builder as cb
+            cb.LATEST_VIDEO_ID = vid
+            
+            cb2 = ContextBuilder()
+            report_prompt = cb2.build_prompt("Generate a comprehensive executive intelligence report for this live webcam session.", vid)
+            report_content = await llm_service.query_assistant(report_prompt)
+            
+            if not report_content or not report_content.strip():
+                raise Exception("Qwen generated an empty report.")
+                
+            report_md_file = r_dir / "report.md"
+            with open(report_md_file, "w", encoding="utf-8") as rf:
+                rf.write(report_content)
+                
+            update_status("COMPLETE", report=report_content)
+            
+        except Exception as exc:
+            logger.exception("Failed to generate AI Master report for webcam")
+            update_status("FAILED", error=f"LLM Generation Error: {exc}")
+
+    background_tasks.add_task(webcam_report_task, video_id, result)
+    
+    return {"message": "Report generation started", "video_id": video_id}

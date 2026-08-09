@@ -67,6 +67,10 @@ interface WorkspaceState {
   chatMessages: ChatMessage[];
   isChatLoading: boolean;
 
+  // ── Webcam ────────────────────────────────────────
+  isWebcamActive: boolean;
+  webcamSessionId: string | null;
+
   // ── Actions ───────────────────────────────────────
   setActiveFile: (file: File | null, previewUrl: string | null) => void;
   setResultVideoUrl: (url: string | null) => void;
@@ -89,6 +93,9 @@ interface WorkspaceState {
   setChatLoading: (v: boolean) => void;
   clearChat: () => void;
   resetWorkspace: () => void;
+  
+  setIsWebcamActive: (v: boolean) => void;
+  setWebcamSessionId: (id: string | null) => void;
   
   // ── Demo Mode ─────────────────────────────────────
   isDemoMode: boolean;
@@ -140,6 +147,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   chatMessages: [],
   isChatLoading: false,
+  
+  isWebcamActive: false,
+  webcamSessionId: null,
 
   setActiveFile: (file, previewUrl) => set({
     activeFile: file,
@@ -152,6 +162,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     videoState: { ...defaultVideoState },
     selectedAlert: null,
     selectedCrimeEvent: null,
+    isWebcamActive: false,
+    webcamSessionId: null,
   }),
   setResultVideoUrl: (url) => set({ resultVideoUrl: url }),
   setVideoId: (id) => set({ videoId: id }),
@@ -171,6 +183,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   toggleOverlay: (key) => set({ overlays: { ...get().overlays, [key]: !get().overlays[key] } }),
   addChatMessage: (msg) => set({ chatMessages: [...get().chatMessages, msg] }),
   setChatLoading: (v) => set({ isChatLoading: v }),
+  
+  setIsWebcamActive: (v) => set({ isWebcamActive: v }),
+  setWebcamSessionId: (id) => set({ webcamSessionId: id }),
   clearChat: () => set({ chatMessages: [] }),
 
   resetWorkspace: () => {

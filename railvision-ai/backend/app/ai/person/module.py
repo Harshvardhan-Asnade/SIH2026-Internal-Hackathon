@@ -80,6 +80,9 @@ class PersonDetectionModule(BaseAIModule):
         if self._config.frame_skip > 0 and frame_idx % (self._config.frame_skip + 1) != 0:
             return []
 
+        # Optional FP16 optimization for GPU/MPS
+        use_half = self._config.device in ["cuda", "mps"]
+
         results = self._model.track(
             frame,
             conf=self._config.confidence,
@@ -89,6 +92,7 @@ class PersonDetectionModule(BaseAIModule):
             tracker="bytetrack.yaml",
             verbose=False,
             device=self._config.device,
+            half=use_half,
         )
 
         detections: list[FrameDetection] = []

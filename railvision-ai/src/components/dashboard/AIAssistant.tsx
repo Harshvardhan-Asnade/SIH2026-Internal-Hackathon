@@ -1,7 +1,7 @@
 "use client";
 
 import { useWorkspaceStore, type ChatMessage } from "@/lib/store";
-import { queryAssistant } from "@/lib/api-service";
+import { queryAssistant, retryReport, generateWebcamReport } from "@/lib/api-service";
 import {
   Brain, Send, Loader2, AlertCircle, Zap, RefreshCw,
   Shield, Users, HardHat, AlertTriangle, MessageSquare,
@@ -36,6 +36,9 @@ export function AIAssistant() {
     setChatLoading,
     clearChat,
     isProcessing,
+    videoId,
+    isWebcamActive,
+    webcamSessionId,
   } = useWorkspaceStore(useShallow(state => ({
     processingResult: state.processingResult,
     chatMessages: state.chatMessages,
@@ -43,7 +46,10 @@ export function AIAssistant() {
     addChatMessage: state.addChatMessage,
     setChatLoading: state.setChatLoading,
     clearChat: state.clearChat,
-    isProcessing: state.isProcessing
+    isProcessing: state.isProcessing,
+    videoId: state.videoId,
+    isWebcamActive: state.isWebcamActive,
+    webcamSessionId: state.webcamSessionId
   })));
 
   const [input, setInput] = useState("");
@@ -55,6 +61,42 @@ export function AIAssistant() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  const handleRetry = async () => {
+    if (!videoId) return;
+    try {
+      useWorkspaceStore.setState((s) => ({
+        processingResult: s.processingResult ? {
+          ...s.processingResult,
+          ai_master_report: "Report is being generated in the background..."
+        } : null
+      }));
+      await retryReport(videoId);
+    } catch (e) {
+      console.error("Failed to retry report", e);
+    }
+  };
+
+  const handleWebcamReport = async () => {
+    if (!webcamSessionId) return;
+    try {
+      useWorkspaceStore.setState((s) => ({
+        processingResult: s.processingResult ? {
+          ...s.processingResult,
+          ai_master_report: "Report is being generated in the background..."
+        } : null
+      }));
+      await generateWebcamReport(webcamSessionId);
+    } catch (e) {
+      console.error("Failed to generate webcam report", e);
+      useWorkspaceStore.setState((s) => ({
+        processingResult: s.processingResult ? {
+          ...s.processingResult,
+          ai_master_report: "FAILED: Network error while generating report."
+        } : null
+      }));
+    }
+  };
 
   // Build a lightweight context object (no raw bbox arrays)
   const buildContext = useCallback(() => {
@@ -216,15 +258,48 @@ export function AIAssistant() {
       {/* ── Scrollable content ──────────────────────────────── */}
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
 
+        {/* ── Webcam Report Generation ──── */}
+        {isWebcamActive && !r?.ai_master_report && (
+          <div className="bg-[#111] border border-[rgba(184,255,59,0.2)] rounded-lg p-4 flex flex-col items-center justify-center text-center">
+            <Zap className="w-6 h-6 text-[#B8FF3B] mb-2" />
+            <p className="text-[11px] font-semibold text-[#B8FF3B] tracking-wider mb-1">LIVE INTELLIGENCE</p>
+            <p className="text-[10px] text-[#A0A0A0] mb-3">Generate an AI master report from current live stats.</p>
+            <button
+              onClick={handleWebcamReport}
+              className="px-4 py-2 bg-[rgba(184,255,59,0.1)] hover:bg-[rgba(184,255,59,0.2)] border border-[rgba(184,255,59,0.3)] rounded-lg text-[10px] text-[#B8FF3B] font-semibold transition-colors flex items-center gap-2"
+            >
+              <Zap className="w-3.5 h-3.5" /> Generate Live Report
+            </button>
+          </div>
+        )}
+
         {/* ── AI Report (auto-generated from processing) ──── */}
-        {reportSections && reportSections.length > 0 && (
+        {r?.ai_master_report === "Report is being generated in the background..." ? (
+          <div className="bg-[#111] border border-white/10 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+            <div className="w-6 h-6 border-2 border-[#B8FF3B] border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-[11px] font-semibold text-white tracking-wider mb-1">CV ANALYSIS COMPLETE</p>
+            <p className="text-[10px] text-[#A0A0A0] uppercase">AI Report Generating...</p>
+          </div>
+        ) : r?.ai_master_report?.startsWith("FAILED:") ? (
+          <div className="bg-[#111] border border-red-500/20 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="w-6 h-6 text-red-500 mb-2" />
+            <p className="text-[11px] font-semibold text-red-500 tracking-wider mb-1">AI REPORT FAILED</p>
+            <p className="text-[10px] text-[#A0A0A0] mb-3">{r.ai_master_report.replace("FAILED:", "").trim()}</p>
+            <button
+              onClick={handleRetry}
+              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded text-[10px] text-red-400 font-medium transition-colors flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3 h-3" /> Retry Report
+            </button>
+          </div>
+        ) : reportSections && reportSections.length > 0 && (
           <div className="border border-[rgba(184,255,59,0.1)] rounded-lg overflow-hidden">
             <button
               onClick={() => setReportExpanded(!reportExpanded)}
               className="w-full flex items-center justify-between px-3 py-2 bg-[rgba(184,255,59,0.03)] hover:bg-[rgba(184,255,59,0.06)] transition-colors"
             >
               <span className="text-[10px] font-semibold text-[#B8FF3B] uppercase tracking-wider flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5" /> AI Intelligence Report
+                <Zap className="w-3.5 h-3.5" /> AI Intelligence Report Ready
               </span>
               {reportExpanded ? <ChevronUp className="w-3.5 h-3.5 text-[#555]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#555]" />}
             </button>

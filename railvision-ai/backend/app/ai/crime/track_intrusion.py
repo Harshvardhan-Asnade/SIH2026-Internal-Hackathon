@@ -47,10 +47,12 @@ class TrackIntrusionService:
         # person_id → {zone_name: consecutive_frames_inside}
         self._inside_count: dict[int, dict[str, int]] = {}
         self._fired: set[str] = set()  # "pid:zone" keys
+        self._zone_cooldown: dict[str, int] = {} # zone_name -> frame_idx of last alert
 
     def reset(self) -> None:
         self._inside_count.clear()
         self._fired.clear()
+        self._zone_cooldown.clear()
 
     def process(
         self,
@@ -62,6 +64,9 @@ class TrackIntrusionService:
     ) -> list[CrimeEvent]:
         """Check all tracked persons against all track zones."""
         events: list[CrimeEvent] = []
+        
+        # 5 seconds cooldown
+        cooldown_frames = int(fps * 5) if fps > 0 else 150
 
         for pid, person in persons.items():
             cx, cy = person.last_position
@@ -85,7 +90,11 @@ class TrackIntrusionService:
                     )
                     count = self._inside_count[pid][zone.name]
 
-                    if count >= self._min_frames and key not in self._fired:
+                    # Check if zone is on cooldown
+                    last_fired_frame = self._zone_cooldown.get(zone.name, -cooldown_frames)
+                    is_on_cooldown = (frame_idx - last_fired_frame) < cooldown_frames
+
+                    if count >= self._min_frames and key not in self._fired and not is_on_cooldown:
                         risk_eval = CrimeRiskEngine.evaluate(
                             "track_intrusion", person.avg_confidence
                         )
@@ -104,6 +113,7 @@ class TrackIntrusionService:
                             )
                         )
                         self._fired.add(key)
+                        self._zone_cooldown[zone.name] = frame_idx
                         logger.warning(
                             "[crime] Track intrusion — person %d in '%s' for %d frames",
                             pid, zone.name, count,

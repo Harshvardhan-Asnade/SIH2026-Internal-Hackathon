@@ -3,6 +3,7 @@
 import { TopHeader } from "@/components/dashboard/TopHeader";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { VideoWorkspace } from "@/components/dashboard/VideoWorkspace";
+import { WebcamWorkspace } from "@/components/dashboard/WebcamWorkspace";
 import { PipelineStatus } from "@/components/dashboard/PipelineStatus";
 import { DynamicTabs } from "@/components/dashboard/DynamicTabs";
 
@@ -11,7 +12,7 @@ import { useWorkspaceStore } from "@/lib/store";
 import { useEffect } from "react";
 
 export default function DashboardPage() {
-  const { resetWorkspace } = useWorkspaceStore();
+  const { resetWorkspace, isWebcamActive } = useWorkspaceStore();
 
   useEffect(() => {
     return () => resetWorkspace();
@@ -31,7 +32,7 @@ export default function DashboardPage() {
           {/* Investigation Split: Video (60%) + AI Chat (40%) */}
           <div className="flex gap-4 flex-[5] min-h-0 shrink-0">
             <div className="flex-[6] min-w-0 flex flex-col">
-              <VideoWorkspace />
+              {isWebcamActive ? <WebcamWorkspace /> : <VideoWorkspace />}
             </div>
             <div className="flex-[4] min-w-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden flex flex-col shadow-lg">
               <AIAssistant />

@@ -148,10 +148,11 @@ class CrimeDetectionModule(BaseAIModule):
         person_dets: list[FrameDetection] = shared_context.get("person_detection", [])
         self._latest_alerts.clear()
         
-        # Update rolling frame buffer
-        self._frame_buffer.append(frame.copy())
-        if len(self._frame_buffer) > self._config.fight_sequence_length:
-            self._frame_buffer.pop(0)
+        # Update rolling frame buffer (only if Fight Detection is enabled to save memory/compute)
+        if self._config.fight_detection_enabled:
+            self._frame_buffer.append(frame.copy())
+            if len(self._frame_buffer) > self._config.fight_sequence_length:
+                self._frame_buffer.pop(0)
 
         # Update person tracker
         for det in person_dets:

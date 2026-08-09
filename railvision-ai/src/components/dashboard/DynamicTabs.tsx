@@ -181,7 +181,7 @@ export function DynamicTabs() {
                 <div className="grid grid-cols-5 gap-5">
                   <MetricCard label="Current Count" value={r.crowd_analysis?.maximum_people || 0} accent />
                   <MetricCard label="Average" value={r.crowd_analysis?.average_people?.toFixed(1) || "0"} />
-                  <MetricCard label="Peak Frame" value={r.crowd_analysis?.peak_frame || 0} />
+                  <MetricCard label="Peak" value={r.crowd_analysis?.maximum_people || 0} />
                   <MetricCard label="Occupancy" value={`${r.crowd_analysis?.occupancy_percentage || 0}%`} />
                   <MetricCard label="Density" value={r.crowd_analysis?.density || "Low"} />
                 </div>

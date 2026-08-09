@@ -16,11 +16,23 @@ import type {
 
 // ── Axios instance ──────────────────────────────────────────────────
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const WS_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 600_000, // 10 min — video processing can be slow
 });
+
+// ── Start Webcam Session ────────────────────────────────────────────
+export async function startWebcamSession(): Promise<{ session_id: string }> {
+  const { data } = await api.post<{ session_id: string }>("/webcam/session");
+  return data;
+}
+
+export async function generateWebcamReport(session_id: string): Promise<{ message: string, video_id: string }> {
+  const { data } = await api.post<{ message: string, video_id: string }>(`/webcam/report/${session_id}`);
+  return data;
+}
 
 // ── Health check ────────────────────────────────────────────────────
 export async function checkHealth(): Promise<HealthResponse> {
@@ -71,6 +83,18 @@ export async function queryAssistant(
     query,
     context,
   });
+  return data;
+}
+
+// ── Get async report status ─────────────────────────────────────────
+export async function getReportStatus(videoId: string): Promise<{status: string, report: string | null, error: string | null}> {
+  const { data } = await api.get<{status: string, report: string | null, error: string | null}>(`/report/${videoId}`);
+  return data;
+}
+
+// ── Retry async report generation ───────────────────────────────────
+export async function retryReport(videoId: string): Promise<{message: string}> {
+  const { data } = await api.post<{message: string}>(`/report/${videoId}/retry`);
   return data;
 }
 

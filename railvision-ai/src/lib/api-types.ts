@@ -24,11 +24,15 @@ export interface Alert {
 }
 
 export interface CrowdAnalysisResult {
-  average_people: number;
-  maximum_people: number;
-  peak_frame: number;
+  current: number;
+  average: number;
+  peak: number;
+  minimum: number;
+  unique_tracks: number;
   density: string;
-  occupancy_percentage: number;
+  occupancy: number;
+  risk: string;
+  peak_timestamp?: number | null;
   heatmap?: string;
   trend: Array<{ frame: number; people_count: number }>;
 }

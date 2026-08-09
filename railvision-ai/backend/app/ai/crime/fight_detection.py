@@ -50,17 +50,20 @@ class FightDetectionService:
         # ── Initialize 3D CNN Model ──────────────────────────────────
         self.device = torch.device("mps" if hasattr(torch.backends, "mps") and torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
         
-        try:
-            # We instantiate mc3_18 with 2 classes (NORMAL, FIGHT)
-            # Operating with random weights pending actual fine-tuning
-            self.model = video_models.mc3_18(weights=None, num_classes=2)
-            self.model.to(self.device)
-            self.model.eval()
-            self._untrained = True
-            logger.info(f"[crime] Initialized Temporal Fight Model (mc3_18) on {self.device} (Untrained)")
-        except Exception as e:
-            logger.error(f"[crime] Failed to initialize 3D model: {e}")
-            self.model = None
+        self.model = None
+        if self._cfg.fight_detection_enabled:
+            try:
+                # We instantiate mc3_18 with 2 classes (NORMAL, FIGHT)
+                # Operating with random weights pending actual fine-tuning
+                self.model = video_models.mc3_18(weights=None, num_classes=2)
+                self.model.to(self.device)
+                self.model.eval()
+                self._untrained = True
+                logger.info(f"[crime] Initialized Temporal Fight Model (mc3_18) on {self.device} (Untrained)")
+            except Exception as e:
+                logger.error(f"[crime] Failed to initialize 3D model: {e}")
+        else:
+            logger.info("[crime] Fight Detection is DISABLED. MC3-18 will not be loaded.")
 
         # Standard Video Transform
         self.transform = T.Compose([
@@ -203,7 +206,7 @@ class FightDetectionService:
         return stacked.unsqueeze(0).to(self.device)
 
     def _run_inference(self, clip_tensor: torch.Tensor) -> tuple[bool, float]:
-        with torch.no_grad():
+        with torch.inference_mode():
             outputs = self.model(clip_tensor)
             probs = torch.nn.functional.softmax(outputs, dim=1)
             fight_prob = probs[0, 1].item()
