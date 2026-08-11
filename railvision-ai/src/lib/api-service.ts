@@ -15,7 +15,21 @@ import type {
 } from "@/lib/api-types";
 
 // ── Axios instance ──────────────────────────────────────────────────
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Automatically determine backend URL based on how the page was accessed
+function getApiBaseUrl(): string {
+  // If explicitly set (e.g. for HTTPS tunnels), use it
+  if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.startsWith("https")) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  // In browser, dynamically use the current hostname but point to port 8000
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  }
+  // Server-side fallback
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 export const WS_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
 
 const api = axios.create({
@@ -23,14 +37,26 @@ const api = axios.create({
   timeout: 600_000, // 10 min — video processing can be slow
 });
 
-// ── Start Webcam Session ────────────────────────────────────────────
-export async function startWebcamSession(): Promise<{ session_id: string }> {
-  const { data } = await api.post<{ session_id: string }>("/webcam/session");
+// ── Webcam ──────────────────────────────────────────────────────────
+export async function startWebcamSession(): Promise<{session_id: string}> {
+  const { data } = await api.post<{session_id: string}>("/webcam/session");
   return data;
 }
 
-export async function generateWebcamReport(session_id: string): Promise<{ message: string, video_id: string }> {
-  const { data } = await api.post<{ message: string, video_id: string }>(`/webcam/report/${session_id}`);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function generateWebcamReport(sessionId: string): Promise<any> {
+  const { data } = await api.post(`/webcam/report/${sessionId}`);
+  return data;
+}
+
+// ── Mobile Camera ───────────────────────────────────────────────────
+export async function startMobileCameraSession(): Promise<{session_id: string}> {
+  const { data } = await api.post<{session_id: string}>("/mobile-camera/session");
+  return data;
+}
+
+export async function checkMobileCameraSession(sessionId: string): Promise<{status: string}> {
+  const { data } = await api.get<{status: string}>(`/mobile-camera/session/${sessionId}/status`);
   return data;
 }
 

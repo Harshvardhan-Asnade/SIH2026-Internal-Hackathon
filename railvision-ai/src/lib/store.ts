@@ -79,6 +79,10 @@ interface WorkspaceState {
   isWebcamActive: boolean;
   webcamSessionId: string | null;
 
+  // ── Mobile Camera ──────────────────────────────────
+  isMobileCameraActive: boolean;
+  mobileSessionId: string | null;
+
   // ── Fall Detection ────────────────────────────────
   fallWarning: FallWarningState;
   setFallWarning: (warning: Partial<FallWarningState>) => void;
@@ -109,6 +113,9 @@ interface WorkspaceState {
   
   setIsWebcamActive: (v: boolean) => void;
   setWebcamSessionId: (id: string | null) => void;
+  
+  setIsMobileCameraActive: (v: boolean) => void;
+  setMobileSessionId: (id: string | null) => void;
   
   // ── Demo Mode ─────────────────────────────────────
   isDemoMode: boolean;
@@ -172,6 +179,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   isWebcamActive: false,
   webcamSessionId: null,
 
+  isMobileCameraActive: false,
+  mobileSessionId: null,
+
   setFallWarning: (warning) => set((state) => ({ fallWarning: { ...state.fallWarning, ...warning } })),
   triggerFallWarning: (alert: Alert) => {
     const current = get().fallWarning;
@@ -210,6 +220,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     selectedCrimeEvent: null,
     isWebcamActive: false,
     webcamSessionId: null,
+    isMobileCameraActive: false,
+    mobileSessionId: null,
   }),
   setResultVideoUrl: (url) => set({ resultVideoUrl: url }),
   setVideoId: (id) => set({ videoId: id }),
@@ -244,6 +256,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   
   setIsWebcamActive: (v) => set({ isWebcamActive: v }),
   setWebcamSessionId: (id) => set({ webcamSessionId: id }),
+  setIsMobileCameraActive: (v) => set({ isMobileCameraActive: v }),
+  setMobileSessionId: (id) => set({ mobileSessionId: id }),
   clearChat: () => set({ chatMessages: [] }),
 
   resetWorkspace: () => {

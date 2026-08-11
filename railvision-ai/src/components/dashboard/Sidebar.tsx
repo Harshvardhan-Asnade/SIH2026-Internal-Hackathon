@@ -4,7 +4,7 @@ import { useWorkspaceStore } from "@/lib/store";
 import type { PipelineStage } from "@/lib/store";
 import {
   Upload, Video, AlertCircle, RotateCcw, Loader2, CheckCircle2,
-  Search, Focus, Activity, Layers, ShieldAlert, FileText, ChevronDown, ChevronUp, Camera, VideoOff
+  Search, Focus, Activity, Layers, ShieldAlert, FileText, ChevronDown, ChevronUp, Camera, VideoOff, Smartphone
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { uploadVideo, processVideo, getResultVideoUrl, getReportStatus } from "@/lib/api-service";
@@ -23,13 +23,15 @@ export function Sidebar() {
     setUploadProgress, isProcessing, setIsProcessing,
     setPipelineStage, setProcessingResult, setError,
     setResultVideoUrl, setVideoId, error, pipelineStage, uploadProgress,
-    processingResult, isWebcamActive, setIsWebcamActive
+    processingResult, isWebcamActive, setIsWebcamActive,
+    isMobileCameraActive, setIsMobileCameraActive
   } = useWorkspaceStore(useShallow(state => ({
     activeFile: state.activeFile, setActiveFile: state.setActiveFile, isUploading: state.isUploading, setIsUploading: state.setIsUploading,
     setUploadProgress: state.setUploadProgress, isProcessing: state.isProcessing, setIsProcessing: state.setIsProcessing,
     setPipelineStage: state.setPipelineStage, setProcessingResult: state.setProcessingResult, setError: state.setError,
-    setResultVideoUrl: state.setResultVideoUrl, setVideoId: state.setVideoId, error: state.error, pipelineStage: state.pipelineStage, uploadProgress: state.uploadProgress,
-    processingResult: state.processingResult, isWebcamActive: state.isWebcamActive, setIsWebcamActive: state.setIsWebcamActive
+    setResultVideoUrl: state.setResultVideoUrl, setVideoId: state.setVideoId, error: state.error, pipelineStage: state.pipelineStage,
+    uploadProgress: state.uploadProgress, processingResult: state.processingResult, isWebcamActive: state.isWebcamActive, setIsWebcamActive: state.setIsWebcamActive,
+    isMobileCameraActive: state.isMobileCameraActive, setIsMobileCameraActive: state.setIsMobileCameraActive
   })));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -198,9 +200,9 @@ export function Sidebar() {
               <div className="mt-3">
                 {!isWebcamActive ? (
                   <button
-                    onClick={() => setIsWebcamActive(true)}
-                    disabled={isRunning}
-                    className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-white/10 bg-[var(--surface-2)] hover:bg-[var(--bg)] hover:text-white hover:border-white/30 text-white/60 transition-all shadow-inner"
+                    onClick={() => { setIsWebcamActive(true); setIsMobileCameraActive(false); }}
+                    disabled={isRunning || isMobileCameraActive}
+                    className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-white/10 bg-[var(--surface-2)] hover:bg-[var(--bg)] hover:text-white hover:border-white/30 text-white/60 transition-all shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     [ USE WEBCAM ]
@@ -217,6 +219,31 @@ export function Sidebar() {
                     [ STOP CAMERA ]
                   </button>
                 )}
+
+                {/* Mobile Camera Button */}
+                <div className="mt-3">
+                  {!isMobileCameraActive ? (
+                    <button
+                      onClick={() => { setIsMobileCameraActive(true); setIsWebcamActive(false); }}
+                      disabled={isRunning || isWebcamActive}
+                      className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-[var(--accent)]/30 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-[var(--accent)] transition-all shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      Connect Phone Camera
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setIsMobileCameraActive(false);
+                        setProcessingResult(null);
+                      }}
+                      className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-[#FF4D4D]/30 bg-[#FF4D4D]/10 hover:bg-[#FF4D4D]/20 text-[#FF4D4D] transition-all"
+                    >
+                      <VideoOff className="w-3.5 h-3.5" />
+                      Disconnect Phone
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useWorkspaceStore } from "@/lib/store";
+import { useShallow } from 'zustand/react/shallow';
 import { startWebcamSession, WS_BASE_URL } from "@/lib/api-service";
 import { Loader2, VideoOff } from "lucide-react";
 import type { ProcessingResult } from "@/lib/api-types";
@@ -14,7 +15,13 @@ export function WebcamWorkspace() {
     setWebcamSessionId,
     setProcessingResult,
     setIsWebcamActive,
-  } = useWorkspaceStore();
+  } = useWorkspaceStore(useShallow(state => ({
+    isWebcamActive: state.isWebcamActive,
+    webcamSessionId: state.webcamSessionId,
+    setWebcamSessionId: state.setWebcamSessionId,
+    setProcessingResult: state.setProcessingResult,
+    setIsWebcamActive: state.setIsWebcamActive,
+  })));
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

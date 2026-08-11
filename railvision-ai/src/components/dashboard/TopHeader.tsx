@@ -5,12 +5,14 @@ import { useShallow } from 'zustand/react/shallow';
 import { useState, useEffect } from "react";
 
 export function TopHeader() {
-  const { isProcessing, pipelineStage, isDemoMode, startDemoMode, setActiveTab } = useWorkspaceStore(useShallow(state => ({
+  const { isProcessing, pipelineStage, isDemoMode, startDemoMode, setActiveTab, isWebcamActive, isMobileCameraActive } = useWorkspaceStore(useShallow(state => ({
     isProcessing: state.isProcessing,
     pipelineStage: state.pipelineStage,
     isDemoMode: state.isDemoMode,
     startDemoMode: state.startDemoMode,
-    setActiveTab: state.setActiveTab
+    setActiveTab: state.setActiveTab,
+    isWebcamActive: state.isWebcamActive,
+    isMobileCameraActive: state.isMobileCameraActive
   })));
   const [time, setTime] = useState("");
 
@@ -33,8 +35,9 @@ export function TopHeader() {
     return () => clearInterval(interval);
   }, [isDemoMode, setActiveTab]);
 
-  const statusLabel = isDemoMode ? "DEMO MODE" : isProcessing ? "PROCESSING" : pipelineStage === "report" ? "COMPLETE" : "ACTIVE";
-  const statusColor = isDemoMode ? "#B8FF3B" : isProcessing ? "#FF7A00" : pipelineStage === "report" ? "#B8FF3B" : "#33FF99";
+  const isLive = isWebcamActive || isMobileCameraActive;
+  const statusLabel = isDemoMode ? "DEMO MODE" : isLive ? "LIVE FEED" : isProcessing ? "PROCESSING" : pipelineStage === "report" ? "COMPLETE" : "ACTIVE";
+  const statusColor = isDemoMode ? "#B8FF3B" : isLive ? "#FF4D4D" : isProcessing ? "#FF7A00" : pipelineStage === "report" ? "#B8FF3B" : "#33FF99";
 
   return (
     <header className="h-16 border-b border-white/10 bg-[var(--surface)]/50 backdrop-blur-md flex items-center justify-between px-6 flex-shrink-0 shadow-[0_4px_24px_rgba(0,0,0,0.4)] z-50">

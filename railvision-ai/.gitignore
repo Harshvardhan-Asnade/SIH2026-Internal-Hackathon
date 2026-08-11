@@ -3,3 +3,8 @@ node_modules/
 backend/venv/
 backend/__pycache__/
 *.log
+
+# Environment configuration (contains secrets and local IP/tunnel URLs)
+.env.local
+.env.*.local
+.env.production

@@ -37,6 +37,7 @@ from app.ai.base.module_registry import ModuleRegistry, get_module_registry
 from app.services.video_service import process_video, VideoProcessingError
 from app.services.llm_service import llm_service
 from app.services.webcam_service import webcam_manager
+from app.services.mobile_camera_service import mobile_camera_manager
 from app.utils.file_utils import (
     generate_video_id,
     get_output_path,
@@ -531,6 +532,69 @@ async def webcam_websocket(websocket: WebSocket, session_id: str):
     finally:
         webcam_manager.end_session(session_id)
         
+# ─────────────────────────────────────────────────────────────────────
+# MOBILE CAMERA ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────
+@router.post("/mobile-camera/session", summary="Initialize a new mobile camera tracking session")
+async def create_mobile_session():
+    import uuid
+    session_id = str(uuid.uuid4())
+    # Instantiate immediately so we can check status
+    mobile_camera_manager.get_session(session_id)
+    return {"session_id": session_id}
+
+@router.get("/mobile-camera/session/{session_id}/status", summary="Check session status")
+async def get_mobile_session_status(session_id: str):
+    sess = mobile_camera_manager.sessions.get(session_id)
+    if not sess:
+        return {"status": "DISCONNECTED"}
+    return {"status": "STREAMING" if sess.is_streaming else "WAITING"}
+
+@router.websocket("/ws/mobile-camera/laptop/{session_id}")
+async def mobile_laptop_websocket(websocket: WebSocket, session_id: str):
+    """Dashboard receives the annotated frames."""
+    await websocket.accept()
+    logger.info(f"Dashboard WS connected for mobile session {session_id}")
+    sess = mobile_camera_manager.get_session(session_id)
+    sess.laptop_ws = websocket
+    try:
+        # Keep connection alive
+        while True:
+            # We just wait for close or pings from dashboard
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        logger.info(f"Dashboard WS disconnected for {session_id}")
+    except Exception as e:
+        logger.error(f"Dashboard WS error for {session_id}: {e}")
+    finally:
+        sess.laptop_ws = None
+        mobile_camera_manager.end_session(session_id)
+
+@router.websocket("/ws/mobile-camera/phone/{session_id}")
+async def mobile_phone_websocket(websocket: WebSocket, session_id: str):
+    """Phone sends raw frames."""
+    await websocket.accept()
+    logger.info(f"Phone WS connected for mobile session {session_id}")
+    sess = mobile_camera_manager.get_session(session_id)
+    sess.phone_ws = websocket
+    sess.start_processing()
+    try:
+        while True:
+            frame_bytes = await websocket.receive_bytes()
+            # Push strictly queued frame
+            sess.enqueue_frame(frame_bytes)
+            
+            # Optionally send ACK back to phone to regulate pacing
+            await websocket.send_json({"status": "ack"})
+    except WebSocketDisconnect:
+        logger.info(f"Phone WS disconnected for {session_id}")
+    except Exception as e:
+        logger.error(f"Phone WS error for {session_id}: {e}")
+    finally:
+        sess.phone_ws = None
+        sess.stop_processing()
+
+
 @router.post(
     "/webcam/report/{session_id}",
     summary="Generate AI Master Report for a Live Webcam Session",
