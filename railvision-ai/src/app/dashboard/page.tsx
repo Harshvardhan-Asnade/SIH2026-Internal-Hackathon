@@ -19,7 +19,7 @@ export default function DashboardPage() {
   }, [resetWorkspace]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#070707]">
+    <div className="flex flex-col h-screen overflow-hidden bg-[var(--bg)]">
       <TopHeader />
 
       <div className="flex flex-1 min-h-0 p-4 gap-4">
@@ -34,7 +34,7 @@ export default function DashboardPage() {
             <div className="flex-[6] min-w-0 flex flex-col">
               {isWebcamActive ? <WebcamWorkspace /> : <VideoWorkspace />}
             </div>
-            <div className="flex-[4] min-w-0 bg-[#111] border border-white/5 rounded-xl overflow-hidden flex flex-col shadow-lg">
+            <div className="flex-[4] min-w-0 bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden flex flex-col shadow-lg">
               <AIAssistant />
             </div>
           </div>

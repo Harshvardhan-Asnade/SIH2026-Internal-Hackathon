@@ -1,0 +1,1 @@
+"""Fall Detection module initialization."""

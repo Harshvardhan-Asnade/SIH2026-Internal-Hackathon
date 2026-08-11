@@ -616,3 +616,19 @@ async def generate_webcam_report(session_id: str, background_tasks: BackgroundTa
     background_tasks.add_task(webcam_report_task, video_id, result)
     
     return {"message": "Report generation started", "video_id": video_id}
+
+# ─────────────────────────────────────────────────────────────────────
+# GET /outputs/{video_id}/thumbnails/{filename}
+# ─────────────────────────────────────────────────────────────────────
+@router.get(
+    "/outputs/{video_id}/thumbnails/{filename}",
+    response_class=FileResponse,
+    summary="Retrieve a thumbnail frame",
+)
+def get_thumbnail(video_id: str, filename: str):
+    """Serve thumbnail images extracted from AI events."""
+    base_dir = get_output_path(video_id).parent
+    thumb_path = base_dir / video_id / "thumbnails" / filename
+    if not thumb_path.exists() or not thumb_path.is_file():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+    return FileResponse(thumb_path)

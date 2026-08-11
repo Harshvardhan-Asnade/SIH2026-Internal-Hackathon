@@ -98,6 +98,17 @@ async def lifespan(app: FastAPI):
     )
     registry.register(WorkerMonitoringModule(worker_cfg))
 
+    from app.ai.fall.config import FallDetectionConfig
+    from app.ai.fall.module import FallDetectionModule
+    from app.ai.weapon.module import WeaponDetectionModule
+    from app.ai.weapon.config import WeaponDetectionConfig
+    
+    fall_module = FallDetectionModule(FallDetectionConfig())
+    registry.register(fall_module)
+    
+    weapon_module = WeaponDetectionModule(WeaponDetectionConfig())
+    registry.register(weapon_module)
+
     # 3. Initialize active modules (CV)
     registry.initialize_all()
 

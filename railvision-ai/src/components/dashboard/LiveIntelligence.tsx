@@ -10,7 +10,7 @@ export function LiveIntelligence() {
 
   const activeAlerts    = result?.alerts?.length || 0;
   const criticalAlerts  = result?.alerts?.filter(a => a.severity === "critical").length || 0;
-  const crowdDensity    = result?.crowd_analysis?.maximum_people || 0;
+  const crowdDensity    = result?.crowd_analysis?.peak || 0;
   const crimeIncidents  = result?.crime_detection?.total_incidents || 0;
   const activeWorkers   = result?.worker_monitoring?.statistics?.total_workers || 0;
   const processingTime  = result?.processing_time?.toFixed(2) || "—";
@@ -41,26 +41,26 @@ export function LiveIntelligence() {
 
       {/* ── Header ─────────────────────────────────── */}
       <div className="flex items-center gap-2 px-1">
-        <Activity className="w-3.5 h-3.5 text-[#B8FF3B]" />
-        <h3 className="text-[10px] font-semibold text-white uppercase tracking-widest">Live Intelligence</h3>
+        <Activity className="w-3.5 h-3.5 text-[var(--accent)]" />
+        <h3 className="text-[10px] font-semibold text-[var(--text-1)] uppercase tracking-widest">Live Intelligence</h3>
         <div className="ml-auto flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full ${result ? "bg-[#B8FF3B] animate-pulse" : "bg-[#333]"}`} />
-          <span className="text-[9px] text-[#555] font-mono">LIVE</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${result ? "bg-[var(--accent)] animate-pulse" : "bg-[var(--surface-2)]"}`} />
+          <span className="text-[9px] text-[var(--text-3)] font-mono">LIVE</span>
         </div>
       </div>
 
       {/* ── Risk Score ─────────────────────────────── */}
-      <div className="bg-[#111] border border-white/5 rounded-xl p-4 flex-shrink-0">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 flex-shrink-0">
         <div className="flex items-baseline justify-between mb-3">
           <span className="text-[10px] text-[#666] uppercase tracking-wider">System Risk</span>
-          <span className="text-[9px] text-[#555] font-mono">/ 100</span>
+          <span className="text-[9px] text-[var(--text-3)] font-mono">/ 100</span>
         </div>
         <div className="flex items-end gap-2 mb-3">
           <motion.span className="text-5xl font-display font-bold leading-none" style={{ color: riskColor }}>
             {result ? rounded : "—"}
           </motion.span>
         </div>
-        <div className="w-full h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${result ? riskScore : 0}%`, backgroundColor: riskColor }}
@@ -68,7 +68,7 @@ export function LiveIntelligence() {
             className="h-full rounded-full"
           />
         </div>
-        <div className="flex justify-between mt-1.5 text-[8px] text-[#444]">
+        <div className="flex justify-between mt-1.5 text-[8px] text-[var(--text-3)]">
           <span>LOW</span><span>MED</span><span>HIGH</span><span>CRITICAL</span>
         </div>
       </div>
@@ -108,16 +108,16 @@ export function LiveIntelligence() {
       </div>
 
       {/* ── Footer ─────────────────────────────────── */}
-      <div className="mt-auto bg-[#111] border border-white/5 rounded-xl p-3 grid grid-cols-2 gap-2">
+      <div className="mt-auto bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 grid grid-cols-2 gap-2">
         <div>
-          <p className="text-[9px] text-[#555] uppercase tracking-wider mb-1">AI Confidence</p>
-          <p className="text-[15px] font-mono font-bold text-white">96.4<span className="text-[10px] text-[#555]">%</span></p>
+          <p className="text-[9px] text-[var(--text-3)] uppercase tracking-wider mb-1">AI Confidence</p>
+          <p className="text-[15px] font-mono font-bold text-[var(--text-1)]">96.4<span className="text-[10px] text-[var(--text-3)]">%</span></p>
         </div>
         <div>
-          <p className="text-[9px] text-[#555] uppercase tracking-wider mb-1 flex items-center gap-1">
+          <p className="text-[9px] text-[var(--text-3)] uppercase tracking-wider mb-1 flex items-center gap-1">
             <Clock className="w-2.5 h-2.5" /> Proc. Time
           </p>
-          <p className="text-[15px] font-mono font-bold text-[#B8FF3B]">{processingTime}<span className="text-[10px] text-[#555]">s</span></p>
+          <p className="text-[15px] font-mono font-bold text-[var(--accent)]">{processingTime}<span className="text-[10px] text-[var(--text-3)]">s</span></p>
         </div>
       </div>
     </motion.div>
@@ -131,13 +131,13 @@ function StatCard({
   value: string; sub?: string; valueColor?: string;
 }) {
   return (
-    <div className="bg-[#111] border border-white/5 rounded-xl p-3 flex flex-col">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-4 h-4" style={{ color: iconColor }} />
-        <span className="text-[8px] text-[#444] uppercase tracking-wider">{label}</span>
+        <span className="text-[8px] text-[var(--text-3)] uppercase tracking-wider">{label}</span>
       </div>
       <span className="text-2xl font-display font-bold leading-none" style={{ color: valueColor || "white" }}>{value}</span>
-      {sub && <span className="text-[8px] text-[#555] mt-1">{sub}</span>}
+      {sub && <span className="text-[8px] text-[var(--text-3)] mt-1">{sub}</span>}
     </div>
   );
 }

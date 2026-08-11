@@ -1,7 +1,7 @@
 "use client";
 
 import { useWorkspaceStore } from "@/lib/store";
-import { Upload, Focus, Activity, Box, ShieldAlert, CheckCircle2, FileText, Search, Layers } from "lucide-react";
+import { Upload, Focus, Activity, ShieldAlert, CheckCircle2, FileText, Search, Layers } from "lucide-react";
 
 export function PipelineStatus() {
   const pipelineStage = useWorkspaceStore(state => state.pipelineStage);
@@ -26,7 +26,7 @@ export function PipelineStatus() {
   };
 
   return (
-    <div className="bg-[#111] border border-white/5 rounded-xl py-2 px-8 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0 shadow-md">
+    <div className="bg-[var(--surface)] border border-white/10 rounded-xl py-3 px-8 mt-0 flex items-center justify-between relative overflow-hidden flex-shrink-0 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
       {/* Background track */}
       <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-[1px] bg-[rgba(255,255,255,0.05)] z-0" />
 
@@ -46,18 +46,18 @@ export function PipelineStatus() {
         const Icon = stage.icon;
 
         return (
-          <div key={stage.id} className="relative z-10 flex flex-row items-center gap-2 bg-[#111] px-2 rounded-full">
-            <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
-              state === "completed" ? "bg-[#B8FF3B] text-[#070707] shadow-[0_0_8px_rgba(184,255,59,0.3)]" :
-              state === "active" ? "bg-[#070707] border border-[#B8FF3B] text-[#B8FF3B] shadow-[0_0_10px_rgba(184,255,59,0.2)] animate-pulse" :
-              "bg-[#181818] border border-white/5 text-[#555]"
+          <div key={stage.id} className="relative z-10 flex flex-row items-center gap-3 bg-[var(--surface)] px-3 rounded-full">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-500 ${
+              state === "completed" ? "bg-[var(--accent)] text-[#070707] shadow-[0_0_12px_rgba(184,255,59,0.4)]" :
+              state === "active" ? "bg-[var(--bg)] border border-[var(--accent)] text-[var(--accent)] shadow-[0_0_12px_rgba(184,255,59,0.3)] animate-pulse" :
+              "bg-white/5 border border-white/10 text-white/30"
             }`}>
-              {state === "completed" ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Icon className="w-2.5 h-2.5" />}
+              {state === "completed" ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
             </div>
-            <span className={`text-[8px] uppercase tracking-widest font-medium whitespace-nowrap ${
-              state === "completed" ? "text-white" :
-              state === "active" ? "text-[#B8FF3B]" :
-              "text-[#555]"
+            <span className={`font-mono text-[9px] uppercase tracking-widest font-bold whitespace-nowrap ${
+              state === "completed" ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" :
+              state === "active" ? "text-[var(--accent)] drop-shadow-[0_0_8px_rgba(184,255,59,0.4)]" :
+              "text-white/30"
             }`}>
               {stage.label}
             </span>

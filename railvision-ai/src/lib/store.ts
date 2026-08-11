@@ -26,6 +26,14 @@ export interface OverlayToggles {
   alertIndicators: boolean;
 }
 
+export interface FallWarningState {
+  visible: boolean;
+  eventId: string | null;
+  trackId: string | null;
+  zone: string | null;
+  timestamp: number | null;
+}
+
 export interface VideoState {
   currentTime: number;
   duration: number;
@@ -70,6 +78,11 @@ interface WorkspaceState {
   // ── Webcam ────────────────────────────────────────
   isWebcamActive: boolean;
   webcamSessionId: string | null;
+
+  // ── Fall Detection ────────────────────────────────
+  fallWarning: FallWarningState;
+  setFallWarning: (warning: Partial<FallWarningState>) => void;
+  triggerFallWarning: (alert: Alert) => void;
 
   // ── Actions ───────────────────────────────────────
   setActiveFile: (file: File | null, previewUrl: string | null) => void;
@@ -135,6 +148,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   processingResult: null,
   error: null,
 
+  fallWarning: {
+    visible: false,
+    eventId: null,
+    trackId: null,
+    zone: null,
+    timestamp: null,
+  },
+
   videoState: { ...defaultVideoState },
   overlays: { ...defaultOverlays },
 
@@ -147,9 +168,34 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   chatMessages: [],
   isChatLoading: false,
-  
+
   isWebcamActive: false,
   webcamSessionId: null,
+
+  setFallWarning: (warning) => set((state) => ({ fallWarning: { ...state.fallWarning, ...warning } })),
+  triggerFallWarning: (alert: Alert) => {
+    const current = get().fallWarning;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eventId = String((alert as any).id || `${alert.timestamp}-${alert.module}`);
+    if (current.eventId === eventId && current.visible) return;
+
+    let trackId = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((alert as any).track_ids && (alert as any).track_ids.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      trackId = String((alert as any).track_ids[0]);
+    }
+
+    set({
+      fallWarning: {
+        visible: true,
+        eventId,
+        trackId,
+        zone: null,
+        timestamp: Date.now(),
+      }
+    });
+  },
 
   setActiveFile: (file, previewUrl) => set({
     activeFile: file,
@@ -171,7 +217,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setIsUploading: (v) => set({ isUploading: v }),
   setIsProcessing: (v) => set({ isProcessing: v }),
   setPipelineStage: (stage) => set({ pipelineStage: stage }),
-  setProcessingResult: (result) => set({ processingResult: result }),
+  setProcessingResult: (result) => {
+    set({ processingResult: result });
+    
+    // Automatically trigger fall warnings for both uploaded video timelines and live webcams
+    if (result && result.alerts) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result.alerts.forEach((alert: any) => {
+        if (alert.event_type === "FALL_DETECTED" && alert.status === "ACTIVE") {
+          get().triggerFallWarning(alert);
+        }
+      });
+    }
+  },
   setError: (error) => set({ error }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   triggerJumpToFrame: (frame) => set({ jumpToFrameTrigger: frame }),
@@ -204,6 +262,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       pipelineStage: 'idle',
       processingResult: null,
       error: null,
+      fallWarning: { visible: false, eventId: null, trackId: null, zone: null, timestamp: null },
       videoState: { ...defaultVideoState },
       overlays: { ...defaultOverlays },
       activeTab: 'overview',

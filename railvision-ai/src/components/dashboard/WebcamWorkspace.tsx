@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWorkspaceStore } from "@/lib/store";
 import { startWebcamSession, WS_BASE_URL } from "@/lib/api-service";
-import { AlertCircle, Camera, Loader2, VideoOff } from "lucide-react";
+import { Loader2, VideoOff } from "lucide-react";
 import type { ProcessingResult } from "@/lib/api-types";
+import FallWarningOverlay from "./FallWarningOverlay";
 
 export function WebcamWorkspace() {
   const {
@@ -114,6 +115,16 @@ export function WebcamWorkspace() {
             ai_master_report: useWorkspaceStore.getState().processingResult?.ai_master_report
           };
           setProcessingResult(resultObj);
+          
+          // Trigger Fall Warning if applicable
+          if (data.alerts) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data.alerts.forEach((alert: any) => {
+              if (alert.event_type === "FALL_DETECTED" && alert.status === "ACTIVE") {
+                useWorkspaceStore.getState().triggerFallWarning(alert);
+              }
+            });
+          }
         }
       } catch (e) {
         console.error("WebSocket message error", e);
@@ -223,7 +234,7 @@ export function WebcamWorkspace() {
 
 
   return (
-    <div className="w-full h-full relative bg-black flex items-center justify-center rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+    <div className="w-full h-full relative bg-black flex items-center justify-center rounded-xl overflow-hidden border border-[var(--border)] shadow-2xl">
       
       {/* Hidden elements for capture */}
       <video ref={videoRef} playsInline muted className="hidden" />
@@ -234,22 +245,22 @@ export function WebcamWorkspace() {
         <div className="flex flex-col items-center justify-center space-y-4">
            {permissionState === "REQUESTING" ? (
              <>
-               <Loader2 className="w-12 h-12 text-[#B8FF3B] animate-spin mb-4" />
-               <h3 className="text-xl font-medium text-white tracking-wide">Requesting Camera Access</h3>
-               <p className="text-sm text-[#A0A0A0]">Please allow camera permissions in your browser.</p>
+               <Loader2 className="w-12 h-12 text-[var(--accent)] animate-spin mb-4" />
+               <h3 className="text-xl font-medium text-[var(--text-1)] tracking-wide">Requesting Camera Access</h3>
+               <p className="text-sm text-[var(--text-2)]">Please allow camera permissions in your browser.</p>
              </>
            ) : null}
         </div>
       ) : permissionState === "DENIED" || permissionState === "ERROR" ? (
-        <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-[#111] rounded-2xl border border-red-500/20">
+        <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-[var(--surface)] rounded-2xl border border-red-500/20">
            <VideoOff className="w-12 h-12 text-red-500 mb-2" />
            <h3 className="text-lg font-medium text-red-500">Camera Access Denied</h3>
-           <p className="text-[13px] text-[#A0A0A0] leading-relaxed">
+           <p className="text-[13px] text-[var(--text-2)] leading-relaxed">
              {errorMsg || "You must allow camera permissions to use Webcam Live Analysis. Please update your browser settings and try again."}
            </p>
            <button 
              onClick={() => setIsWebcamActive(false)}
-             className="mt-4 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white font-medium transition-colors"
+             className="mt-4 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-[var(--border-h)] rounded-lg text-sm text-[var(--text-1)] font-medium transition-colors"
            >
              Cancel
            </button>
@@ -262,26 +273,28 @@ export function WebcamWorkspace() {
             className="w-full h-full object-contain"
           />
           
+          <FallWarningOverlay />
+          
           {/* Live Overlay HUD */}
-          <div className="absolute top-4 left-4 flex gap-3">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-lg border border-[#B8FF3B]/30">
-                <div className="w-2 h-2 rounded-full bg-[#B8FF3B] animate-pulse" />
-                <span className="text-[11px] font-bold text-[#B8FF3B] tracking-wider uppercase">Live Analysis</span>
+          <div className="absolute top-5 left-5 flex gap-3 z-30">
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-sm border border-[var(--accent)]/30 shadow-md">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" />
+                <span className="text-[9px] font-mono text-[var(--accent)] tracking-widest uppercase">LIVE ANALYSIS</span>
              </div>
              
              {isWebSocketReady && (
                <div className="flex gap-2">
-                 <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                   <span className="text-[10px] text-[#A0A0A0] uppercase tracking-wider mr-2">CAM FPS</span>
-                   <span className="text-[11px] font-mono font-medium text-white">{stats.camFps}</span>
+                 <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-sm border border-white/10 shadow-md">
+                   <span className="text-[9px] font-mono text-white/50 uppercase tracking-widest">CAM FPS</span>
+                   <span className="text-[9px] font-mono text-white tracking-widest">{stats.camFps}</span>
                  </div>
-                 <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                   <span className="text-[10px] text-[#A0A0A0] uppercase tracking-wider mr-2">AI FPS</span>
-                   <span className="text-[11px] font-mono font-medium text-white">{stats.aiFps}</span>
+                 <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-sm border border-white/10 shadow-md">
+                   <span className="text-[9px] font-mono text-white/50 uppercase tracking-widest">AI FPS</span>
+                   <span className="text-[9px] font-mono text-white tracking-widest">{stats.aiFps}</span>
                  </div>
-                 <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-                  <span className="text-[10px] text-[#A0A0A0] uppercase tracking-wider font-semibold">LATENCY:</span>
-                  <span className={`text-[12px] font-mono font-bold ${stats.latency < 500 ? 'text-[#B8FF3B]' : stats.latency < 1000 ? 'text-[#FFC857]' : 'text-[#FF4D4D]'}`}>{stats.latency}ms</span>
+                 <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-sm border border-white/10 shadow-md">
+                  <span className="text-[9px] font-mono text-white/50 uppercase tracking-widest">LATENCY</span>
+                  <span className={`text-[9px] font-mono tracking-widest ${stats.latency < 500 ? 'text-[var(--accent)]' : stats.latency < 1000 ? 'text-[#FFC857]' : 'text-[#FF4D4D]'}`}>{stats.latency}ms</span>
                  </div>
                </div>
              )}
@@ -289,8 +302,8 @@ export function WebcamWorkspace() {
           
           {!isWebSocketReady && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
-               <Loader2 className="w-8 h-8 text-[#B8FF3B] animate-spin mb-4" />
-               <p className="text-sm font-medium text-white tracking-widest uppercase">Connecting AI Engine...</p>
+               <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mb-4" />
+               <p className="text-sm font-medium text-[var(--text-1)] tracking-widest uppercase">Connecting AI Engine...</p>
             </div>
           )}
         </>

@@ -13,11 +13,15 @@ export const DEMO_MOCK_RESULT: ProcessingResult = {
     { frame: 10, class: "bag", confidence: 0.88, bbox: [200, 300, 250, 350] },
   ],
   crowd_analysis: {
-    average_people: 42.5,
-    maximum_people: 87,
-    peak_frame: 450,
-    occupancy_percentage: 85,
+    current: 45,
+    average: 42.5,
+    peak: 87,
+    minimum: 12,
+    unique_tracks: 104,
     density: "High",
+    occupancy: 68,
+    risk: "NORMAL",
+    peak_timestamp: 1100.5,
     trend: Array.from({ length: 60 }, (_, i) => ({
       frame: i * 30,
       people_count: Math.floor(20 + Math.random() * 60)

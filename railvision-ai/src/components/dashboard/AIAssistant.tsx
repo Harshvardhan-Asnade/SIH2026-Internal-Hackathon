@@ -107,7 +107,7 @@ export function AIAssistant() {
       processing_time: r.processing_time,
     };
     if (r.crowd_analysis) {
-      const { trend, heatmap, ...crowdSummary } = r.crowd_analysis;
+      const { trend: _trend, heatmap: _heatmap, ...crowdSummary } = r.crowd_analysis;
       ctx.crowd_analysis = crowdSummary;
     }
     if (r.crime_detection) {
@@ -213,43 +213,49 @@ export function AIAssistant() {
   // ─── Render: No data state ──────────────────────────────────────
   if (!r && !isProcessing) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-[#555] bg-[#111] rounded-xl border border-white/5">
-        <Brain className="w-10 h-10 opacity-30 mb-3" />
-        <p className="text-[13px] text-white font-medium mb-1">AI Investigation Assistant</p>
-        <p className="text-[10px] text-[#A0A0A0]">Powered by Qwen 3</p>
-        <p className="text-[10px] text-[#555] mt-3">Upload a video to activate</p>
+      <div className="h-full flex flex-col items-center justify-center text-[var(--text-3)] bg-[var(--surface)] rounded-xl border border-white/10 shadow-inner relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+        <Brain className="w-10 h-10 text-white/10 mb-4 animate-pulse relative z-10" />
+        <p className="font-sans font-bold text-sm text-white tracking-wide mb-1 relative z-10">NO VIDEO SELECTED</p>
+        <p className="font-mono text-[9px] text-[var(--accent)] tracking-widest uppercase drop-shadow-[0_0_8px_rgba(184,255,59,0.4)] relative z-10">Powered by Qwen 3</p>
+        <p className="font-mono text-[10px] text-white/40 mt-4 tracking-widest uppercase relative z-10 text-center px-6">Upload CCTV footage to begin investigation</p>
       </div>
     );
   }
 
   if (isProcessing && !r) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-[#111] rounded-xl border border-white/5">
-        <div className="w-8 h-8 border-2 border-[#B8FF3B] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-[12px] text-white">AI Engine Processing...</p>
-        <p className="text-[10px] text-[#555] mt-1">Intelligence report generating</p>
+      <div className="h-full flex flex-col items-center justify-center bg-[var(--surface)] rounded-xl border border-white/10 shadow-inner relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
+        <div className="flex gap-1.5 mb-5 relative z-10">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" style={{ animationDelay: "0ms" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" style={{ animationDelay: "150ms" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" style={{ animationDelay: "300ms" }} />
+        </div>
+        <p className="font-sans font-bold text-[12px] text-[var(--accent)] tracking-widest uppercase relative z-10 drop-shadow-[0_0_8px_rgba(184,255,59,0.2)]">AI Engine Processing</p>
+        <p className="font-mono text-[9px] text-white/40 mt-2 tracking-widest uppercase relative z-10">Intelligence report generating...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-[#111] rounded-xl border border-white/5 overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--surface)] rounded-xl border border-[var(--border)] overflow-hidden">
       {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#0c0c0c] shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-[rgba(184,255,59,0.1)] flex items-center justify-center">
-            <Brain className="w-3.5 h-3.5 text-[#B8FF3B]" />
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[var(--surface)] shrink-0 shadow-md z-10 relative">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[rgba(184,255,59,0.1)] flex items-center justify-center border border-[var(--accent)]/30">
+            <Brain className="w-4 h-4 text-[var(--accent)]" />
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-white">AI Investigation Assistant</p>
-            <p className="text-[9px] text-[#555]">Qwen 3 • Analysing detection JSON</p>
+          <div className="flex flex-col">
+            <p className="font-sans font-bold text-[12px] text-white tracking-wider uppercase drop-shadow-sm">AI Investigation Assistant</p>
+            <p className="font-mono text-[9px] text-[var(--accent)] tracking-widest uppercase drop-shadow-[0_0_4px_rgba(184,255,59,0.3)]">Qwen 3 • Analysing JSON</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#33FF99] animate-pulse" />
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#33FF99] animate-pulse shadow-[0_0_8px_#33FF99]" />
           {chatMessages.length > 0 && (
-            <button onClick={clearChat} className="text-[9px] text-[#555] hover:text-[#A0A0A0] transition-colors">
-              Clear
+            <button onClick={clearChat} className="font-mono text-[9px] text-white/40 hover:text-white transition-colors uppercase tracking-widest font-bold">
+              [ Clear ]
             </button>
           )}
         </div>
@@ -260,13 +266,13 @@ export function AIAssistant() {
 
         {/* ── Webcam Report Generation ──── */}
         {isWebcamActive && !r?.ai_master_report && (
-          <div className="bg-[#111] border border-[rgba(184,255,59,0.2)] rounded-lg p-4 flex flex-col items-center justify-center text-center">
-            <Zap className="w-6 h-6 text-[#B8FF3B] mb-2" />
-            <p className="text-[11px] font-semibold text-[#B8FF3B] tracking-wider mb-1">LIVE INTELLIGENCE</p>
-            <p className="text-[10px] text-[#A0A0A0] mb-3">Generate an AI master report from current live stats.</p>
+          <div className="bg-[var(--surface)] border border-[rgba(184,255,59,0.2)] rounded-lg p-4 flex flex-col items-center justify-center text-center">
+            <Zap className="w-6 h-6 text-[var(--accent)] mb-2" />
+            <p className="text-[11px] font-semibold text-[var(--accent)] tracking-wider mb-1">LIVE INTELLIGENCE</p>
+            <p className="text-[10px] text-[var(--text-2)] mb-3">Generate an AI master report from current live stats.</p>
             <button
               onClick={handleWebcamReport}
-              className="px-4 py-2 bg-[rgba(184,255,59,0.1)] hover:bg-[rgba(184,255,59,0.2)] border border-[rgba(184,255,59,0.3)] rounded-lg text-[10px] text-[#B8FF3B] font-semibold transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-[rgba(184,255,59,0.1)] hover:bg-[rgba(184,255,59,0.2)] border border-[rgba(184,255,59,0.3)] rounded-lg text-[10px] text-[var(--accent)] font-semibold transition-colors flex items-center gap-2"
             >
               <Zap className="w-3.5 h-3.5" /> Generate Live Report
             </button>
@@ -275,16 +281,16 @@ export function AIAssistant() {
 
         {/* ── AI Report (auto-generated from processing) ──── */}
         {r?.ai_master_report === "Report is being generated in the background..." ? (
-          <div className="bg-[#111] border border-white/10 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-            <div className="w-6 h-6 border-2 border-[#B8FF3B] border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-[11px] font-semibold text-white tracking-wider mb-1">CV ANALYSIS COMPLETE</p>
-            <p className="text-[10px] text-[#A0A0A0] uppercase">AI Report Generating...</p>
+          <div className="bg-[var(--surface)] border border-[var(--border-h)] rounded-lg p-4 flex flex-col items-center justify-center text-center">
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-[11px] font-semibold text-[var(--text-1)] tracking-wider mb-1">CV ANALYSIS COMPLETE</p>
+            <p className="text-[10px] text-[var(--text-2)] uppercase">AI Report Generating...</p>
           </div>
         ) : r?.ai_master_report?.startsWith("FAILED:") ? (
-          <div className="bg-[#111] border border-red-500/20 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+          <div className="bg-[var(--surface)] border border-red-500/20 rounded-lg p-4 flex flex-col items-center justify-center text-center">
             <AlertTriangle className="w-6 h-6 text-red-500 mb-2" />
             <p className="text-[11px] font-semibold text-red-500 tracking-wider mb-1">AI REPORT FAILED</p>
-            <p className="text-[10px] text-[#A0A0A0] mb-3">{r.ai_master_report.replace("FAILED:", "").trim()}</p>
+            <p className="text-[10px] text-[var(--text-2)] mb-3">{r.ai_master_report.replace("FAILED:", "").trim()}</p>
             <button
               onClick={handleRetry}
               className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded text-[10px] text-red-400 font-medium transition-colors flex items-center gap-1.5"
@@ -298,10 +304,10 @@ export function AIAssistant() {
               onClick={() => setReportExpanded(!reportExpanded)}
               className="w-full flex items-center justify-between px-3 py-2 bg-[rgba(184,255,59,0.03)] hover:bg-[rgba(184,255,59,0.06)] transition-colors"
             >
-              <span className="text-[10px] font-semibold text-[#B8FF3B] uppercase tracking-wider flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider flex items-center gap-2">
                 <Zap className="w-3.5 h-3.5" /> AI Intelligence Report Ready
               </span>
-              {reportExpanded ? <ChevronUp className="w-3.5 h-3.5 text-[#555]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#555]" />}
+              {reportExpanded ? <ChevronUp className="w-3.5 h-3.5 text-[var(--text-3)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--text-3)]" />}
             </button>
 
             <AnimatePresence initial={false}>
@@ -315,7 +321,7 @@ export function AIAssistant() {
                   <div className="px-3 py-3 space-y-3 max-h-[300px] overflow-y-auto scrollbar-thin">
                     {reportSections.map((s, i) => (
                       <div key={i}>
-                        <h4 className="text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <h4 className="text-[10px] font-semibold text-[var(--text-2)] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                           {getSectionIcon(s.title)}
                           {s.title}
                         </h4>
@@ -331,8 +337,8 @@ export function AIAssistant() {
 
         {/* ── Fallback: raw report if parsing found nothing ── */}
         {r?.ai_master_report && (!reportSections || reportSections.length === 0) && (
-          <div className="bg-[#070707] border border-white/5 rounded-lg p-3">
-            <h4 className="text-[10px] font-semibold text-[#B8FF3B] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-lg p-3">
+            <h4 className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5" /> AI Report
             </h4>
             <p className="text-[11px] text-[#ccc] leading-relaxed whitespace-pre-wrap font-mono max-h-[200px] overflow-y-auto scrollbar-thin">
@@ -344,7 +350,7 @@ export function AIAssistant() {
         {/* ── Quick stats badges ─────────────────────────────── */}
         {r && (
           <div className="flex flex-wrap gap-2">
-            <StatBadge icon={Users} label={`${r.crowd_analysis?.maximum_people || 0} crowd`} color="#B8FF3B" />
+            <StatBadge icon={Users} label={`${r.crowd_analysis?.peak || 0} crowd`} color="#B8FF3B" />
             <StatBadge icon={Shield} label={`${r.crime_detection?.total_incidents || 0} incidents`} color="#FF7A00" />
             <StatBadge icon={HardHat} label={`${r.worker_monitoring?.statistics?.total_workers || 0} workers`} color="#33FF99" />
             <StatBadge icon={AlertTriangle} label={`${r.alerts?.length || 0} alerts`} color="#FF4D4D" />
@@ -359,7 +365,7 @@ export function AIAssistant() {
                 ? "bg-[rgba(184,255,59,0.1)] border border-[rgba(184,255,59,0.15)]"
                 : msg.role === "system"
                 ? "bg-[rgba(255,77,77,0.06)] border border-[rgba(255,77,77,0.15)]"
-                : "bg-[#070707] border border-white/5"
+                : "bg-[var(--bg)] border border-[var(--border)]"
             }`}>
               {msg.role === "system" && (
                 <div className="flex items-center gap-1.5 mb-1">
@@ -369,12 +375,12 @@ export function AIAssistant() {
               )}
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Brain className="w-3 h-3 text-[#B8FF3B]" />
-                  <span className="text-[9px] text-[#B8FF3B] font-semibold uppercase">Qwen 3</span>
+                  <Brain className="w-3 h-3 text-[var(--accent)]" />
+                  <span className="text-[9px] text-[var(--accent)] font-semibold uppercase">Qwen 3</span>
                 </div>
               )}
               <p className={`text-[11px] leading-relaxed whitespace-pre-wrap ${
-                msg.role === "user" ? "text-white" : msg.role === "system" ? "text-[#FF4D4D]" : "text-[#ccc]"
+                msg.role === "user" ? "text-[var(--text-1)]" : msg.role === "system" ? "text-[#FF4D4D]" : "text-[#ccc]"
               }`}>
                 {msg.content}
               </p>
@@ -385,9 +391,9 @@ export function AIAssistant() {
         {/* ── Loading indicator ──────────────────────────────── */}
         {isChatLoading && (
           <div className="flex justify-start">
-            <div className="bg-[#070707] border border-white/5 rounded-lg px-3 py-2 flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 text-[#B8FF3B] animate-spin" />
-              <span className="text-[11px] text-[#A0A0A0]">Qwen 3 is thinking...</span>
+            <div className="bg-[var(--bg)] border border-[var(--border)] rounded-lg px-3 py-2 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+              <span className="text-[11px] text-[var(--text-2)]">Qwen 3 is thinking...</span>
             </div>
           </div>
         )}
@@ -400,7 +406,7 @@ export function AIAssistant() {
         <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
           {QUICK_PROMPTS.map((prompt, i) => (
             <button key={i} onClick={() => sendMessage(prompt)}
-              className="text-[9px] text-[#A0A0A0] bg-[#070707] border border-white/5 hover:border-[rgba(184,255,59,0.2)] hover:text-[#B8FF3B] px-2.5 py-1 rounded-full transition-colors"
+              className="text-[9px] text-[var(--text-2)] bg-[var(--bg)] border border-[var(--border)] hover:border-[rgba(184,255,59,0.2)] hover:text-[var(--accent)] px-2.5 py-1 rounded-full transition-colors"
             >
               {prompt}
             </button>
@@ -409,9 +415,9 @@ export function AIAssistant() {
       )}
 
       {/* ── Input bar ──────────────────────────────────────── */}
-      <div className="px-4 py-3 border-t border-white/5 bg-[#0c0c0c] shrink-0">
-        <div className="flex items-center gap-3 bg-[#070707] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 focus-within:border-[rgba(184,255,59,0.3)] transition-colors shadow-inner">
-          <MessageSquare className="w-3.5 h-3.5 text-[#555] shrink-0" />
+      <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--bg)] shrink-0">
+        <div className="flex items-center gap-3 bg-[var(--bg)] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 focus-within:border-[rgba(184,255,59,0.3)] transition-colors shadow-inner">
+          <MessageSquare className="w-3.5 h-3.5 text-[var(--text-3)] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -420,12 +426,12 @@ export function AIAssistant() {
             onKeyDown={handleKeyDown}
             placeholder={r ? "Ask about this investigation..." : "Process a video first..."}
             disabled={!r || isChatLoading}
-            className="flex-1 bg-transparent text-[11px] text-white placeholder-[#555] focus:outline-none disabled:cursor-not-allowed"
+            className="flex-1 bg-transparent text-[11px] text-[var(--text-1)] placeholder-[#555] focus:outline-none disabled:cursor-not-allowed"
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isChatLoading || !r}
-            className="w-6 h-6 rounded flex items-center justify-center bg-[#B8FF3B] text-[#070707] hover:bg-[#c8ff5b] disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+            className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent)] text-[#070707] hover:bg-[#c8ff5b] disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
           >
             {isChatLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
           </button>
@@ -439,19 +445,19 @@ export function AIAssistant() {
 
 function StatBadge({ icon: Icon, label, color }: { icon: React.ElementType; label: string; color: string }) {
   return (
-    <div className="flex items-center gap-1.5 bg-[#070707] border border-white/5 px-2 py-1 rounded-full">
+    <div className="flex items-center gap-1.5 bg-[var(--bg)] border border-[var(--border)] px-2 py-1 rounded-full">
       <Icon className="w-3 h-3" style={{ color }} />
-      <span className="text-[9px] text-[#A0A0A0]">{label}</span>
+      <span className="text-[9px] text-[var(--text-2)]">{label}</span>
     </div>
   );
 }
 
 function getSectionIcon(title: string) {
   const t = title.toLowerCase();
-  if (t.includes("crowd")) return <Users className="w-3 h-3 text-[#B8FF3B]" />;
+  if (t.includes("crowd")) return <Users className="w-3 h-3 text-[var(--accent)]" />;
   if (t.includes("crime") || t.includes("incident")) return <Shield className="w-3 h-3 text-[#FF7A00]" />;
   if (t.includes("worker") || t.includes("safety")) return <HardHat className="w-3 h-3 text-[#33FF99]" />;
   if (t.includes("alert") || t.includes("risk")) return <AlertTriangle className="w-3 h-3 text-[#FF4D4D]" />;
   if (t.includes("recommend") || t.includes("action")) return <Zap className="w-3 h-3 text-[#FFC857]" />;
-  return <Brain className="w-3 h-3 text-[#B8FF3B]" />;
+  return <Brain className="w-3 h-3 text-[var(--accent)]" />;
 }

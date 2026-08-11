@@ -49,6 +49,8 @@ class KnowledgeBaseBuilder:
         crowd_raw = rd.get("crowd_analysis") or {}
         crime_raw = rd.get("crime_detection") or {}
         worker_raw = rd.get("worker_monitoring") or {}
+        fall_raw = rd.get("fall_detection") or {}
+        weapon_raw = rd.get("weapon_detection") or {}
         top_alerts = [a.model_dump(mode="json") for a in result.alerts] if result.alerts else []
 
         # ── 1. metadata.json ──────────────────────────────────────
@@ -92,8 +94,17 @@ class KnowledgeBaseBuilder:
         worker_summary = self._build_worker_summary(worker_raw)
         self._write(report_dir / "worker.json", worker_summary)
 
+        # ── 4.5 fall.json ─────────────────────────────────────────
+        fall_summary = self._build_fall_summary(fall_raw)
+        self._write(report_dir / "fall.json", fall_summary)
+
+        # ── 4.6 weapon.json ───────────────────────────────────────
+        weapon_summary = self._build_weapon_summary(weapon_raw, top_alerts)
+        self._write(report_dir / "weapon.json", weapon_summary)
+
         # ── 5. Unified alerts.json ────────────────────────────────
         all_alerts = self._collect_all_alerts(top_alerts, crowd_raw, crime_raw, worker_raw, fps)
+        # Note: fall module currently yields top_alerts, so no specific extract needed here yet.
         self._write(report_dir / "alerts.json", all_alerts)
 
         # ── 6. timeline.json ─────────────────────────────────────
@@ -140,6 +151,8 @@ class KnowledgeBaseBuilder:
             "crowd_analysis": crowd_summary,
             "crime_analysis": crime_summary,
             "worker_analysis": worker_summary,
+            "fall_detection": fall_summary,
+            "weapon_detection": weapon_summary,
             "risk_assessment": {
                 "crowd_risk": crowd_summary.get("risk", "NORMAL"),
                 "crime_risk": "HIGH" if crime_summary.get("total_incidents", 0) > 0 else "LOW",
@@ -313,9 +326,49 @@ class KnowledgeBaseBuilder:
             ],
         }
 
+    # ── FALL ─────────────────────────────────────────────────────────
+
+    def _build_fall_summary(self, raw: dict) -> dict:
+        """Extract fall detection summary."""
+        summary = raw.get("summary", {}) if isinstance(raw, dict) else {}
+        return {
+            "enabled": raw.get("enabled", False) if isinstance(raw, dict) else False,
+            "total_falls": summary.get("total_falls", 0),
+            "active_candidates": summary.get("active_candidates", 0),
+            "alert_count": len(raw.get("alerts", [])) if isinstance(raw, dict) else 0,
+            "status": "IMPLEMENTED",
+        }
+
+    # ── WEAPON ───────────────────────────────────────────────────────
+
+    def _build_weapon_summary(self, weapon_raw: dict[str, Any], top_alerts: list[dict[str, Any]]) -> dict[str, Any]:
+        """Summarize weapon detection into structured JSON."""
+        # Weapon events are output directly as alerts, so we extract from top_alerts
+        weapon_alerts = [a for a in top_alerts if a.get("module") == "weapon_detection"]
+        
+        types = set()
+        for a in weapon_alerts:
+            # event_type is e.g. "KNIFE DETECTED"
+            evt = a.get("event_type", "").replace(" DETECTED", "")
+            if evt:
+                types.add(evt)
+        
+        return {
+            "supported_classes": ["knife", "baseball bat", "blade"],
+            "unsupported_classes": ["gun", "pistol", "rifle", "firearm"],
+            "firearm_detection": "NOT_IMPLEMENTED",
+            "total_events": len(weapon_alerts),
+            "confirmed_events": len(weapon_alerts),
+            "weapon_types": list(types),
+            "latest_event": weapon_alerts[-1]["timestamp"] if weapon_alerts else None,
+            "zones": [],
+            "severity": "CRITICAL" if weapon_alerts else "NORMAL",
+            "status": "PARTIALLY_IMPLEMENTED"
+        }
+
     # ── UNIFIED ALERTS ───────────────────────────────────────────────
 
-    def _collect_all_alerts(self, top_alerts, crowd_raw, crime_raw, worker_raw, fps) -> list:
+    def _collect_all_alerts(self, top_alerts: list, crowd_raw, crime_raw, worker_raw, fps) -> list:
         """Merge alerts from ALL sources: top-level + each module's inline alerts."""
         all_alerts = []
 

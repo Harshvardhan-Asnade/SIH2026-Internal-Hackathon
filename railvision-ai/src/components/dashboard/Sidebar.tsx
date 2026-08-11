@@ -35,7 +35,7 @@ export function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadExpanded, setUploadExpanded] = useState(true);
 
-  // ── File handlers ─────────────────────────────────────────
+  // File handlers
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -87,7 +87,7 @@ export function Sidebar() {
       setResultVideoUrl(getResultVideoUrl(uploadRes.video_id));
       setIsProcessing(false);
 
-      // ── Poll for AI Master Report ──────────────────────────────
+      // Poll for AI Master Report
       (async () => {
         try {
           const maxAttempts = 60; // 2 mins max
@@ -157,14 +157,14 @@ export function Sidebar() {
   return (
     <div className="w-64 flex-shrink-0 flex flex-col gap-4 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin">
 
-      {/* ═══════════ SECTION 1: Upload Zone ═══════════════════ */}
-      <div className="bg-[#111] border border-white/5 rounded-xl p-4 flex-shrink-0 shadow-sm">
+      {/* SECTION 1: Upload Zone */}
+      <div className="bg-[var(--surface)] border border-white/10 rounded-xl p-5 flex-shrink-0 shadow-lg shadow-black/20 group">
         <button
           onClick={() => setUploadExpanded(!uploadExpanded)}
-          className="w-full flex items-center justify-between text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-widest mb-1"
+          className="w-full flex items-center justify-between text-[10px] font-mono font-bold text-[var(--text-3)] group-hover:text-white/60 uppercase tracking-widest mb-1 transition-colors"
         >
-          Source Input
-          {uploadExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          <span>{'// Source Input'}</span>
+          {uploadExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
 
         <AnimatePresence initial={false}>
@@ -175,35 +175,35 @@ export function Sidebar() {
             >
               {/* Drop area */}
               <div
-                className={`h-[80px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all mt-2 ${
+                className={`h-[90px] rounded-lg border border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all mt-3 ${
                   activeFile
-                    ? "border-[rgba(184,255,59,0.3)] bg-[rgba(184,255,59,0.04)]"
-                    : "border-white/5 hover:border-white/5 hover:bg-[rgba(255,255,255,0.05)]"
+                    ? "border-[var(--accent)] bg-[var(--accent)]/10"
+                    : "border-white/20 hover:border-[var(--accent)] hover:bg-white/5"
                 }`}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => !isRunning && fileInputRef.current?.click()}
               >
                 <input type="file" accept="video/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-                <Upload className={`w-5 h-5 mb-1 ${activeFile ? "text-[#B8FF3B]" : "text-[#444]"}`} />
-                <p className="text-[10px] font-medium text-white leading-tight">
-                  {activeFile ? "Video ready" : "Drop video here"}
+                <Upload className={`w-4 h-4 mb-2 transition-colors ${activeFile ? "text-[var(--accent)]" : "text-white/40"}`} />
+                <p className="font-sans font-bold text-xs text-white uppercase tracking-wider leading-tight">
+                  {activeFile ? "Video ready" : "Drop CCTV Video"}
                 </p>
-                <p className="text-[9px] text-[#555] mt-0.5 truncate max-w-[90%] mx-auto">
+                <p className="font-mono text-[9px] text-white/50 mt-1 uppercase tracking-widest truncate max-w-[90%] mx-auto">
                   {activeFile ? activeFile.name : "MP4 · AVI · MOV"}
                 </p>
               </div>
 
               {/* Webcam Button */}
-              <div className="mt-2">
+              <div className="mt-3">
                 {!isWebcamActive ? (
                   <button
                     onClick={() => setIsWebcamActive(true)}
                     disabled={isRunning}
-                    className="w-full py-2.5 rounded-lg text-[10px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 border border-white/10 bg-[#181818] hover:bg-[#222] hover:border-white/20 text-[#A0A0A0] transition-colors"
+                    className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-white/10 bg-[var(--surface-2)] hover:bg-[var(--bg)] hover:text-white hover:border-white/30 text-white/60 transition-all shadow-inner"
                   >
                     <Camera className="w-3.5 h-3.5" />
-                    Use Webcam
+                    [ USE WEBCAM ]
                   </button>
                 ) : (
                   <button
@@ -211,10 +211,10 @@ export function Sidebar() {
                       setIsWebcamActive(false);
                       setProcessingResult(null);
                     }}
-                    className="w-full py-2.5 rounded-lg text-[10px] font-semibold tracking-wider uppercase flex items-center justify-center gap-2 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                    className="w-full py-2.5 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 border border-[#FF4D4D]/30 bg-[#FF4D4D]/10 hover:bg-[#FF4D4D]/20 text-[#FF4D4D] transition-all"
                   >
                     <VideoOff className="w-3.5 h-3.5" />
-                    Stop Camera
+                    [ STOP CAMERA ]
                   </button>
                 )}
               </div>
@@ -225,8 +225,8 @@ export function Sidebar() {
         {/* Compact file indicator (when collapsed) */}
         {!uploadExpanded && activeFile && (
           <div className="flex items-center gap-2 mt-1 px-1">
-            <Video className="w-3 h-3 text-[#B8FF3B] shrink-0" />
-            <span className="text-[9px] text-[#A0A0A0] truncate flex-1">{activeFile.name}</span>
+            <Video className="w-3 h-3 text-[var(--accent)] shrink-0" />
+            <span className="text-[9px] text-[var(--text-2)] truncate flex-1">{activeFile.name}</span>
           </div>
         )}
 
@@ -234,11 +234,11 @@ export function Sidebar() {
         <AnimatePresence>
           {isUploading && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-2">
-              <div className="flex justify-between text-[9px] font-mono text-[#B8FF3B] mb-1">
+              <div className="flex justify-between text-[9px] font-mono text-[var(--accent)] mb-1">
                 <span>UPLOADING</span><span>{uploadProgress}%</span>
               </div>
-              <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} className="h-full bg-[#B8FF3B] rounded-full" />
+              <div className="h-1 bg-[var(--surface-2)] rounded-full overflow-hidden">
+                <motion.div initial={{ width: 0 }} animate={{ width: `${uploadProgress}%` }} className="h-full bg-[var(--accent)] rounded-full" />
               </div>
             </motion.div>
           )}
@@ -253,7 +253,7 @@ export function Sidebar() {
               <AlertCircle className="w-3.5 h-3.5 text-[#FF4D4D] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[9px] text-[#FF4D4D] leading-snug">{error}</p>
-                <button onClick={runPipeline} className="text-[9px] text-[#FF7A00] flex items-center gap-1 mt-1 hover:text-white transition-colors">
+                <button onClick={runPipeline} className="text-[9px] text-[#FF7A00] flex items-center gap-1 mt-1 hover:text-[var(--text-1)] transition-colors">
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
               </div>
@@ -265,17 +265,20 @@ export function Sidebar() {
         <button
           onClick={isDone ? () => useWorkspaceStore.getState().resetWorkspace() : runPipeline}
           disabled={!activeFile || isRunning}
-          className={`w-full py-2.5 rounded-xl text-[11px] font-semibold tracking-wide flex items-center justify-center gap-2 transition-all mt-2 ${
+          className={`btn-magnetic w-full py-3 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 transition-all mt-3 group ${
             isDone
-              ? "bg-[rgba(184,255,59,0.1)] text-[#B8FF3B] border border-[rgba(184,255,59,0.2)] hover:bg-[rgba(184,255,59,0.15)]"
+              ? "bg-[rgba(184,255,59,0.1)] text-[var(--accent)] border border-[rgba(184,255,59,0.2)] hover:bg-[rgba(184,255,59,0.15)]"
               : activeFile && !isRunning
-              ? "bg-[#B8FF3B] text-[#070707] hover:bg-[#c8ff5b] shadow-[0_0_16px_rgba(184,255,59,0.2)]"
-              : "bg-[#181818] text-[#444] cursor-not-allowed border border-white/5"
+              ? "bg-[var(--accent)] text-[var(--bg)] shadow-[0_4px_16px_rgba(184,255,59,0.25)]"
+              : "bg-white/5 text-white/30 cursor-not-allowed border border-white/10"
           }`}
         >
-          {isRunning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {isDone && <CheckCircle2 className="w-3.5 h-3.5" />}
-          {isUploading ? "Uploading…" : isProcessing ? "Processing…" : isDone ? "New Analysis" : "Run AI Pipeline"}
+          <span className={`btn-bg ${activeFile && !isRunning ? 'bg-white' : 'hidden'}`}></span>
+          <span className="btn-text flex items-center gap-2 group-hover:text-dark">
+            {isRunning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {isDone && <CheckCircle2 className="w-3.5 h-3.5" />}
+            {isUploading ? "UPLOADING…" : isProcessing ? "PROCESSING…" : isDone ? "NEW ANALYSIS" : "RUN AI PIPELINE"}
+          </span>
         </button>
       </div>
 
@@ -285,26 +288,6 @@ export function Sidebar() {
   );
 }
 
-/* ═══════════ Constants ════════════════════════════════════════ */
-
-const PIPELINE_STAGES = [
-  { id: "upload", label: "Upload", icon: Upload },
-  { id: "extraction", label: "Frame Extract", icon: Search },
-  { id: "detection", label: "YOLO Detection", icon: Focus },
-  { id: "tracking", label: "ByteTrack", icon: Activity },
-  { id: "analysis", label: "Analysis", icon: Layers },
-  { id: "alerts", label: "Alert Gen", icon: ShieldAlert },
-  { id: "report", label: "Report", icon: FileText },
-];
-
-function getStageState(stageId: PipelineStage, index: number, currentStage: PipelineStage): "completed" | "active" | "pending" {
-  const currentIndex = PIPELINE_STAGES.findIndex(s => s.id === currentStage);
-  if (currentStage === "idle") return "pending";
-  if (currentStage === "report") return "completed";
-  if (index < currentIndex) return "completed";
-  if (index === currentIndex) return "active";
-  return "pending";
-}
+{/* Constants */}
 
 function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }
-

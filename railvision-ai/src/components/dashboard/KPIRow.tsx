@@ -6,7 +6,7 @@ import { Activity, Users, AlertTriangle, Target, Cpu } from "lucide-react";
 export function KPIRow() {
   const r = useWorkspaceStore(state => state.processingResult);
 
-  const crowdPeak = r?.crowd_analysis?.maximum_people || 0;
+  const crowdPeak = r?.crowd_analysis?.peak || 0;
   const alertCount = r?.alerts?.length || 0;
   const criticalCount = r?.alerts?.filter(a => a.severity === "critical").length || 0;
   const detectionsCount = r?.detections?.length || 0;
@@ -64,18 +64,20 @@ export function KPIRow() {
         return (
           <div
             key={i}
-            className="flex-1 bg-[#111] border border-white/5 rounded-xl p-4 flex items-center gap-4 hover:border-[rgba(255,255,255,0.1)] hover:bg-[#151515] hover:shadow-lg transition-all duration-300 min-w-0"
+            className="flex-1 relative overflow-hidden rounded-xl p-5 flex items-center gap-4 border border-white/10 hover:border-white/30 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 min-w-0 group"
+            style={{ backgroundColor: `color-mix(in srgb, ${c.color} 5%, var(--surface))` }}
           >
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: `${c.color}10` }}
+              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform"
+              style={{ backgroundColor: `${c.color}15`, border: `1px solid ${c.color}30` }}
             >
               <Icon className="w-4 h-4" style={{ color: c.color }} />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] text-[#555] uppercase tracking-wider font-semibold truncate">{c.title}</p>
-              <p className="text-[20px] font-display font-bold text-white leading-none mt-0.5">{c.value}</p>
-              <p className="text-[9px] text-[#555] mt-0.5 truncate">{c.sub}</p>
+            <div className="min-w-0 flex-1 relative z-10">
+              <p className="font-mono text-[9px] text-white/50 uppercase tracking-widest font-bold truncate mb-1">{c.title}</p>
+              <p className="font-sans text-3xl font-extrabold text-white leading-none tracking-tight">{c.value}</p>
+              <p className="font-mono text-[10px] mt-1.5 truncate uppercase tracking-wider font-bold" style={{ color: c.sub === 'Idle' ? 'rgba(255,255,255,0.4)' : c.color }}>{c.sub}</p>
             </div>
           </div>
         );

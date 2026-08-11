@@ -25,6 +25,8 @@ from app.ai.crime.config import CrimeDetectionConfig
 from app.ai.crime.module import CrimeDetectionModule
 from app.ai.worker.config import WorkerMonitoringConfig
 from app.ai.worker.module import WorkerMonitoringModule
+from app.ai.weapon.module import WeaponDetectionModule
+from app.ai.weapon.config import WeaponDetectionConfig
 from app.models.schemas import ProcessingResult
 
 logger = logging.getLogger(__name__)
@@ -76,6 +78,11 @@ class WebcamSession:
             enabled=self.settings.enable_worker_monitoring,
         )
         self.registry.register(WorkerMonitoringModule(worker_cfg))
+
+        from app.ai.fall.config import FallDetectionConfig
+        from app.ai.fall.module import FallDetectionModule
+        self.registry.register(FallDetectionModule(FallDetectionConfig()))
+        self.registry.register(WeaponDetectionModule(WeaponDetectionConfig()))
 
         # Load weights
         self.registry.initialize_all()

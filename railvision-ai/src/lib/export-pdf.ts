@@ -35,7 +35,7 @@ export function exportToPDF(result: ProcessingResult | null, stationName = "Vado
   
   let riskScore = 10;
   if (criticalAlerts > 0) riskScore += criticalAlerts * 15;
-  if (result.crowd_analysis && result.crowd_analysis.maximum_people > 30) riskScore += 20;
+  if (result.crowd_analysis && result.crowd_analysis.peak > 30) riskScore += 20;
   if (result.crime_detection && result.crime_detection.total_incidents > 0) riskScore += 25;
   riskScore = Math.min(riskScore, 100);
 
@@ -66,9 +66,9 @@ export function exportToPDF(result: ProcessingResult | null, stationName = "Vado
       startY: nextY + 5,
       head: [["Parameter", "Measurement"]],
       body: [
-        ["Peak Crowd Density", `${result.crowd_analysis.maximum_people} people`],
-        ["Average Density", `${result.crowd_analysis.average_people.toFixed(1)} people`],
-        ["Platform Occupancy", `${result.crowd_analysis.occupancy_percentage}%`],
+        ["Peak Crowd Density", `${result.crowd_analysis.peak} people`],
+        ["Average Density", `${result.crowd_analysis.average.toFixed(1)} people`],
+        ["Space Occupancy", `${result.crowd_analysis.occupancy}%`],
         ["Congestion Status", result.crowd_analysis.density]
       ],
       theme: "grid",

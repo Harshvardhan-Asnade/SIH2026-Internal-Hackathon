@@ -94,26 +94,26 @@ export function UploadQueue() {
     <div className="w-[220px] flex-shrink-0 flex flex-col gap-2 min-h-0">
 
       {/* ── Drop Zone Card ─────────────────────────── */}
-      <div className="bg-[#111] border border-white/5 rounded-xl p-3 flex flex-col gap-2 flex-shrink-0">
-        <p className="text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-widest">Source Input</p>
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 flex flex-col gap-2 flex-shrink-0">
+        <p className="text-[10px] font-semibold text-[var(--text-2)] uppercase tracking-widest">Source Input</p>
 
         {/* Drop area */}
         <div
           className={`h-[90px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
             activeFile
               ? "border-[rgba(184,255,59,0.3)] bg-[rgba(184,255,59,0.04)]"
-              : "border-white/5 hover:border-white/5 hover:bg-[rgba(255,255,255,0.05)]"
+              : "border-[var(--border)] hover:border-[var(--border)] hover:bg-[rgba(255,255,255,0.05)]"
           }`}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => !isRunning && fileInputRef.current?.click()}
         >
           <input type="file" accept="video/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-          <Upload className={`w-5 h-5 mb-1.5 ${activeFile ? "text-[#B8FF3B]" : "text-[#444]"}`} />
-          <p className="text-[10px] font-medium text-white leading-tight">
+          <Upload className={`w-5 h-5 mb-1.5 ${activeFile ? "text-[var(--accent)]" : "text-[var(--text-3)]"}`} />
+          <p className="text-[10px] font-medium text-[var(--text-1)] leading-tight">
             {activeFile ? "Video ready" : "Drop video here"}
           </p>
-          <p className="text-[9px] text-[#555] mt-0.5 truncate max-w-[90%]">
+          <p className="text-[9px] text-[var(--text-3)] mt-0.5 truncate max-w-[90%]">
             {activeFile ? activeFile.name : "MP4 · AVI · MOV"}
           </p>
         </div>
@@ -122,14 +122,14 @@ export function UploadQueue() {
         <AnimatePresence>
           {isUploading && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-              <div className="flex justify-between text-[9px] font-mono text-[#B8FF3B] mb-1">
+              <div className="flex justify-between text-[9px] font-mono text-[var(--accent)] mb-1">
                 <span>UPLOADING</span><span>{uploadProgress}%</span>
               </div>
-              <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+              <div className="h-1 bg-[var(--surface-2)] rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
-                  className="h-full bg-[#B8FF3B] rounded-full" 
+                  className="h-full bg-[var(--accent)] rounded-full" 
                 />
               </div>
             </motion.div>
@@ -147,7 +147,7 @@ export function UploadQueue() {
               <AlertCircle className="w-3.5 h-3.5 text-[#FF4D4D] shrink-0 mt-0.5" />
               <div>
                 <p className="text-[9px] text-[#FF4D4D] leading-snug">{error}</p>
-                <button onClick={runPipeline} className="text-[9px] text-[#FF7A00] flex items-center gap-1 mt-1 hover:text-white transition-colors">
+                <button onClick={runPipeline} className="text-[9px] text-[#FF7A00] flex items-center gap-1 mt-1 hover:text-[var(--text-1)] transition-colors">
                   <RotateCcw className="w-3 h-3" /> Retry
                 </button>
               </div>
@@ -161,10 +161,10 @@ export function UploadQueue() {
           disabled={!activeFile || isRunning}
           className={`w-full py-2.5 rounded-xl text-[11px] font-semibold tracking-wide flex items-center justify-center gap-2 transition-all ${
             isDone
-              ? "bg-[rgba(184,255,59,0.1)] text-[#B8FF3B] border border-[rgba(184,255,59,0.2)] hover:bg-[rgba(184,255,59,0.15)]"
+              ? "bg-[rgba(184,255,59,0.1)] text-[var(--accent)] border border-[rgba(184,255,59,0.2)] hover:bg-[rgba(184,255,59,0.15)]"
               : activeFile && !isRunning
-              ? "bg-[#B8FF3B] text-[#070707] hover:bg-[#c8ff5b] shadow-[0_0_16px_rgba(184,255,59,0.2)]"
-              : "bg-[#181818] text-[#444] cursor-not-allowed border border-white/5"
+              ? "bg-[var(--accent)] text-[#070707] hover:bg-[#c8ff5b] shadow-[0_0_16px_rgba(184,255,59,0.2)]"
+              : "bg-[var(--surface-2)] text-[var(--text-3)] cursor-not-allowed border border-[var(--border)]"
           }`}
         >
           {isRunning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -174,17 +174,17 @@ export function UploadQueue() {
       </div>
 
       {/* ── Recent Files ───────────────────────────── */}
-      <div className="bg-[#111] border border-white/5 rounded-xl p-3 flex-1 flex flex-col min-h-0 overflow-hidden">
-        <p className="text-[10px] font-semibold text-[#A0A0A0] uppercase tracking-widest mb-2">Recent Files</p>
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <p className="text-[10px] font-semibold text-[var(--text-2)] uppercase tracking-widest mb-2">Recent Files</p>
         <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin">
           {sampleVideos.map((v, i) => (
             <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors group">
-              <Video className="w-3.5 h-3.5 text-[#444] shrink-0 group-hover:text-white transition-colors" />
+              <Video className="w-3.5 h-3.5 text-[var(--text-3)] shrink-0 group-hover:text-[var(--text-1)] transition-colors" />
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-white truncate group-hover:text-[#B8FF3B] transition-colors">{v.name}</p>
-                <p className="text-[9px] text-[#555] flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{v.dur}</p>
+                <p className="text-[10px] text-[var(--text-1)] truncate group-hover:text-[var(--accent)] transition-colors">{v.name}</p>
+                <p className="text-[9px] text-[var(--text-3)] flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{v.dur}</p>
               </div>
-              <span className={`text-[8px] uppercase font-mono ${v.status === "Ready" ? "text-[#B8FF3B]" : "text-[#555]"}`}>{v.status}</span>
+              <span className={`text-[8px] uppercase font-mono ${v.status === "Ready" ? "text-[var(--accent)]" : "text-[var(--text-3)]"}`}>{v.status}</span>
             </div>
           ))}
         </div>

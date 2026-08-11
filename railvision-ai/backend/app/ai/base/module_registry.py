@@ -218,6 +218,45 @@ class ModuleRegistry:
         person_result = module_results.get("person_detection", {})
         top_level_detections = person_result.get("detections", [])
 
+        # ── Thumbnail Extraction ─────────────────────────────────────
+        try:
+            # Get unique frames that triggered an alert
+            alert_frames = set()
+            for alert in all_alerts:
+                f = alert.get("frame")
+                if f is not None and isinstance(f, int):
+                    alert_frames.add(f)
+                    
+            if alert_frames:
+                # Prepare thumbnail directory
+                video_id = output_path.stem.replace('_processed', '')
+                thumb_dir = output_path.parent / video_id / "thumbnails"
+                thumb_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Open the PROCESSED video to grab frames with bounding boxes
+                tcap = cv2.VideoCapture(str(output_path))
+                if tcap.isOpened():
+                    out_fps = tcap.get(cv2.CAP_PROP_FPS) or 30.0
+                    for f_idx in sorted(alert_frames):
+                        # Use timestamp seeking for robustness against H.264 indexing issues
+                        # timestamp in milliseconds
+                        target_msec = (f_idx / out_fps) * 1000.0
+                        tcap.set(cv2.CAP_PROP_POS_MSEC, target_msec)
+                        ret, tframe = tcap.read()
+                        if ret and tframe is not None:
+                            # Resize to reasonable thumbnail size (e.g. 640px wide)
+                            h, w = tframe.shape[:2]
+                            new_w = 640
+                            new_h = int((new_w / w) * h)
+                            thumb = cv2.resize(tframe, (new_w, new_h))
+                            thumb_path = thumb_dir / f"frame_{f_idx}.jpg"
+                            cv2.imwrite(str(thumb_path), thumb)
+                        else:
+                            logger.warning("Failed to extract thumbnail for frame %d", f_idx)
+                    tcap.release()
+        except Exception as e:
+            logger.error("Thumbnail extraction failed: %s", e)
+
         return {
             # ── Original fields (backward compatible) ────────────────
             "status": "success",

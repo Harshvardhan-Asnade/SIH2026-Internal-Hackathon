@@ -91,6 +91,13 @@ export interface WorkMonitoringResult {
   workers: WorkerInfo[];
 }
 
+export interface FallDetectionResult {
+  total_falls: number;
+  confirmed_falls: number;
+  active_candidates: number;
+  status: string;
+}
+
 export interface ProcessingResult {
   status: string;
   video: string;
@@ -102,6 +109,7 @@ export interface ProcessingResult {
   crowd_analysis?: CrowdAnalysisResult;
   crime_detection?: CrimeDetectionResult;
   worker_monitoring?: WorkMonitoringResult;
+  fall_detection?: FallDetectionResult;
   alerts?: Alert[];
   ai_master_report?: string;
 }

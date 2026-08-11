@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#070707] text-white flex">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)] flex">
 
 
       {/* ── Main ──────────────────────────────────────────── */}
